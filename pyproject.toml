@@ -1,0 +1,38 @@
+[project]
+name = "market_data_backend_platform"
+version = "0.1.0"
+description = "FastAPI backend platform for market data"
+readme = "README.md"
+requires-python = ">=3.14"
+authors = [
+  { name = "Marco Alice" }
+]
+
+[tool.mypy]
+python_version = "3.14"
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+strict_optional = true
+exclude = ["tests/"]
+
+[[tool.mypy.overrides]]
+module = "market_data_backend_platform.*"
+strict = true
+disallow_any_generics = false
+
+
+[tool.black]
+line-length = 88
+target-version = ["py314"]
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
