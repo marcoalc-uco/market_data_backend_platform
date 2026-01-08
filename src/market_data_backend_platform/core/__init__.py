@@ -6,3 +6,7 @@ This module provides the foundational components for the application:
 - logging: Structured logging with structlog
 - exceptions: Custom exception hierarchy
 """
+
+from .config import Settings, get_settings, settings
+
+__all__ = ["Settings", "get_settings", "settings"]
