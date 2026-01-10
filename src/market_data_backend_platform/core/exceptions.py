@@ -9,7 +9,7 @@ This module provides a hierarchy of exceptions for structured error handling:
     └── ExternalAPIError      # External API failures
 
 Usage:
-    from market_data_backend_platform.core.exceptions import NotFoundError
+    from market_data_backend_platform.core import NotFoundError
 
     raise NotFoundError(
         "Instrument not found",
@@ -29,7 +29,7 @@ class MarketDataError(Exception):
     - Easy logging with `logger.error(exc.message, **exc.details)`
 
     Attributes:
-        message: Human-readable error description.
+        message: Error description.
         details: Optional dict with structured error context.
     """
 
@@ -37,7 +37,7 @@ class MarketDataError(Exception):
         """Initialize the exception.
 
         Args:
-            message: Human-readable error description.
+            message: Error description.
             details: Optional dictionary with additional error context.
                      Useful for logging and debugging.
         """
@@ -73,7 +73,11 @@ class ValidationError(MarketDataError):
     Example:
         raise ValidationError(
             "Invalid date format",
-            details={"field": "start_date", "expected": "YYYY-MM-DD", "received": "2024/01/01"}
+            details={
+                "field": "start_date",
+                "expected": "YYYY-MM-DD",
+                "received": "2024/01/01",
+            }
         )
     """
 

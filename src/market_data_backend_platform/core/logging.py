@@ -13,7 +13,7 @@ from typing import Any
 
 import structlog
 
-from market_data_backend_platform.core import get_settings
+from market_data_backend_platform.core.config import get_settings
 
 
 def setup_logging() -> None:
@@ -83,7 +83,7 @@ def setup_logging() -> None:
     )
 
 
-def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str | None = None) -> structlog.BoundLogger:
     """Get a configured logger instance.
 
     Args:

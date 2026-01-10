@@ -6,7 +6,7 @@ Following TDD: write tests first, then implement exceptions.py to pass them.
 
 import pytest
 
-from market_data_backend_platform.core.exceptions import (
+from market_data_backend_platform.core import (
     ConfigurationError,
     ExternalAPIError,
     MarketDataError,
