@@ -22,6 +22,19 @@ module = "market_data_backend_platform.*"
 strict = true
 disallow_any_generics = false
 
+[[tool.mypy.overrides]]
+module = "market_data_backend_platform.core.logging"
+warn_return_any = false
+
+# FastAPI decorator modules - decorators are not fully typed
+[[tool.mypy.overrides]]
+module = "market_data_backend_platform.api.routes.*"
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = "market_data_backend_platform.main"
+disallow_untyped_decorators = false
+
 
 [tool.black]
 line-length = 88
