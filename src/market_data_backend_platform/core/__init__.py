@@ -8,6 +8,24 @@ This module provides the foundational components for the application:
 """
 
 from .config import Settings, get_settings, settings
+from .exceptions import (
+    ConfigurationError,
+    ExternalAPIError,
+    MarketDataError,
+    NotFoundError,
+    ValidationError,
+)
 from .logging import get_logger, setup_logging
 
-__all__ = ["Settings", "get_settings", "settings", "setup_logging", "get_logger"]
+__all__ = [
+    "Settings",
+    "get_settings",
+    "settings",
+    "setup_logging",
+    "get_logger",
+    "MarketDataError",
+    "ConfigurationError",
+    "ValidationError",
+    "NotFoundError",
+    "ExternalAPIError",
+]
