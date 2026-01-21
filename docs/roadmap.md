@@ -257,10 +257,10 @@ Tareas:
 
 ## Estado del proyecto
 
-- [ ] Fase 0 — Diseño y arquitectura
-- [ ] Fase 1 — Setup del proyecto
-- [ ] Fase 2 — Backend base (FastAPI)
-- [ ] Fase 3 — Modelado y persistencia
+- [x] Fase 0 — Diseño y arquitectura
+- [x] Fase 1 — Setup del proyecto
+- [x] Fase 2 — Backend base (FastAPI)
+- [/] Fase 3 — Modelado y persistencia
 - [ ] Fase 4 — Ingestión de datos (ETL)
 - [ ] Fase 5 — API REST de consulta
 - [ ] Fase 6 — Visualización con Grafana
