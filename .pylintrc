@@ -39,8 +39,8 @@ module-rgx=([a-z_][a-z0-9_]*)|(__.*__)
 class-rgx=[A-Z][a-zA-Z0-9]+$
 
 [TYPECHECK]
-ignored-modules=pandas,numpy
-ignored-classes=numpy.*,pandas.*
+ignored-modules=pandas,numpy,sqlalchemy,sqlalchemy.orm,sqlalchemy.sql.functions
+ignored-classes=numpy.*,pandas.*,sqlalchemy.*
 
 [DOCSTRING]
 docstring-min-length=10
