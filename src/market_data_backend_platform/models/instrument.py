@@ -7,7 +7,7 @@ indices, and cryptocurrencies tracked by the platform.
 import enum
 
 from sqlalchemy import Boolean, Enum, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from market_data_backend_platform.models.base import Base, TimestampMixin
 
@@ -39,6 +39,7 @@ class Instrument(TimestampMixin, Base):
         instrument_type: Type of instrument (stock, index, crypto).
         exchange: Exchange where the instrument is traded.
         is_active: Whether the instrument is actively being tracked.
+        prices: Relationship to associated MarketPrice records.
         created_at: Timestamp of record creation (from mixin).
         updated_at: Timestamp of last update (from mixin).
     """
@@ -68,6 +69,12 @@ class Instrument(TimestampMixin, Base):
         Boolean,
         default=True,
         nullable=False,
+    )
+
+    # Relationship to MarketPrice records
+    prices: Mapped[list["MarketPrice"]] = relationship(
+        back_populates="instrument",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:
