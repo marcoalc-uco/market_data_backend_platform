@@ -6,11 +6,15 @@ This module defines the MarketPrice model representing OHLCV
 
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Index, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from market_data_backend_platform.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from market_data_backend_platform.models.instrument import Instrument
 
 
 class MarketPrice(TimestampMixin, Base):

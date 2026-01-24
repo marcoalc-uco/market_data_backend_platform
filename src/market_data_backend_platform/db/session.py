@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 # Create SQLAlchemy engine with connection pool configuration
 # Using sync engine for simplicity; can be upgraded to async if needed
 engine: "Engine" = create_engine(
-    settings.database_url,
+    str(settings.database_url),  # Explicit str for mypy compatibility
     pool_size=settings.db_pool_size,
     max_overflow=settings.db_max_overflow,
     pool_pre_ping=True,  # Verify connections before using
@@ -48,7 +48,7 @@ def get_session() -> Generator[Session, None, None]:
     Yields:
         Session: SQLAlchemy session bound to the engine.
 
-    Example:
+    Example ::
         @app.get("/items")
         def get_items(session: Session = Depends(get_session)):
             items = session.query(Item).all()

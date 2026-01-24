@@ -5,11 +5,15 @@ indices, and cryptocurrencies tracked by the platform.
 """
 
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from market_data_backend_platform.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from market_data_backend_platform.models.market_price import MarketPrice
 
 
 class InstrumentType(enum.Enum):
