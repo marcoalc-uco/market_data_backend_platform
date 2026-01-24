@@ -15,7 +15,7 @@ warn_unused_configs = true
 ignore_missing_imports = true
 no_implicit_optional = true
 strict_optional = true
-exclude = ["tests/"]
+exclude = ["tests/", "alembic/"]
 
 [[tool.mypy.overrides]]
 module = "market_data_backend_platform.*"
