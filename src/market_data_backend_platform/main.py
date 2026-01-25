@@ -14,7 +14,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from market_data_backend_platform.api.routes import health
+from market_data_backend_platform.api.routes import health, instruments
 from market_data_backend_platform.core import (
     MarketDataError,
     get_logger,
@@ -71,6 +71,8 @@ app.add_middleware(
 # Register routers
 # Health endpoint at /health
 app.include_router(health.router)
+# Instruments CRUD at /instruments
+app.include_router(instruments.router, prefix="/instruments", tags=["instruments"])
 
 
 # Global exception handler for MarketDataError

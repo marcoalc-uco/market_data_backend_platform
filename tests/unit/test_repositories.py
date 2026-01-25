@@ -1,6 +1,5 @@
 """Tests for Repository Pattern implementation.
 
-Following TDD: These tests are written FIRST, before implementation.
 Tests use SQLite in-memory for unit test independence.
 """
 

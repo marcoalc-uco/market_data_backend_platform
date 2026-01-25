@@ -1,8 +1,6 @@
 """Tests for database session configuration.
 
 This module tests the database engine and session factory setup.
-Following TDD: These tests are written FIRST, before implementation.
-
 For unit tests, we use SQLite in-memory to avoid PostgreSQL dependency.
 """
 
