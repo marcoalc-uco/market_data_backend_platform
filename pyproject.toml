@@ -15,7 +15,7 @@ warn_unused_configs = true
 ignore_missing_imports = true
 no_implicit_optional = true
 strict_optional = true
-exclude = ["tests/"]
+exclude = ["tests/", "alembic/"]
 
 [[tool.mypy.overrides]]
 module = "market_data_backend_platform.*"
@@ -24,6 +24,14 @@ disallow_any_generics = false
 
 [[tool.mypy.overrides]]
 module = "market_data_backend_platform.core.logging"
+warn_return_any = false
+
+# SQLAlchemy modules - session.query().first() and session.get() return Any
+[[tool.mypy.overrides]]
+module = [
+    "market_data_backend_platform.repositories.*",
+    "market_data_backend_platform.db.*",
+]
 warn_return_any = false
 
 # FastAPI decorator modules - decorators are not fully typed

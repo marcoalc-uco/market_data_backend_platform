@@ -1,7 +1,7 @@
 [MASTER]
 ignore=.venv,venv,build,dist,__pycache__,.git,.mypy_cache,.pytest_cache,htmlcov
 ignore-patterns=^setup\.py$,^docs/.*,^notebooks/.*,^data/raw/.*
-ignore-paths=tests
+ignore-paths=tests,alembic
 load-plugins=pylint.extensions.docstyle,pylint.extensions.docparams,pylint.extensions.mccabe,pylint.extensions.set_membership
 extension-pkg-allow-list=pandas,numpy
 persistent=yes
@@ -39,8 +39,8 @@ module-rgx=([a-z_][a-z0-9_]*)|(__.*__)
 class-rgx=[A-Z][a-zA-Z0-9]+$
 
 [TYPECHECK]
-ignored-modules=pandas,numpy
-ignored-classes=numpy.*,pandas.*
+ignored-modules=pandas,numpy,sqlalchemy,sqlalchemy.orm,sqlalchemy.sql.functions
+ignored-classes=numpy.*,pandas.*,sqlalchemy.*
 
 [DOCSTRING]
 docstring-min-length=10

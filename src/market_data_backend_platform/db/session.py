@@ -1,0 +1,81 @@
+"""SQLAlchemy database engine and session configuration.
+
+This module provides the database engine and session factory
+for the application. It uses the configuration from core.config.
+
+Usage with FastAPI dependency injection:
+    @app.get("/items")
+    def get_items(session: Session = Depends(get_session)):
+        ...
+"""
+
+from collections.abc import Generator
+from typing import TYPE_CHECKING
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from market_data_backend_platform.core import settings
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Engine
+
+# Create SQLAlchemy engine with connection pool configuration
+# Using sync engine for simplicity; can be upgraded to async if needed
+engine: "Engine" = create_engine(
+    str(settings.database_url),  # Explicit str for mypy compatibility
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
+    pool_pre_ping=True,  # Verify connections before using
+    echo=settings.debug,  # Log SQL in debug mode
+)
+
+# Session factory - creates new sessions bound to the engine
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+)
+
+
+def get_session() -> Generator[Session, None, None]:
+    """Provide a database session for FastAPI dependency injection.
+
+    This generator creates a new session for each request and
+    ensures proper cleanup after the request completes.
+
+    Yields:
+        Session: SQLAlchemy session bound to the engine.
+
+    Example ::
+        @app.get("/items")
+        def get_items(session: Session = Depends(get_session)):
+            items = session.query(Item).all()
+            return items
+    """
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def create_test_session_factory() -> "sessionmaker[Session]":
+    """Create a session factory for testing with SQLite in-memory.
+
+    This is used in unit tests to avoid PostgreSQL dependency.
+
+    Returns:
+        sessionmaker: Session factory bound to SQLite in-memory engine.
+    """
+    test_engine = create_engine("sqlite:///:memory:")
+    return sessionmaker(
+        bind=test_engine,
+        autocommit=False,
+        autoflush=False,
+    )
