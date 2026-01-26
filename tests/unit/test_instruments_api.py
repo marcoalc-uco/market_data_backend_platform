@@ -11,7 +11,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from market_data_backend_platform.main import app
-from market_data_backend_platform.models import Base, Instrument, InstrumentType
+from market_data_backend_platform.models import (
+    Base,
+    Instrument,
+    InstrumentType,
+    MarketPrice,
+)
 
 
 # Test database setup (SQLite in-memory)
@@ -261,5 +266,130 @@ class TestDeleteInstrument:
     def test_delete_instrument_not_found(self, client: TestClient):
         """Should return 404 when instrument not found."""
         response = client.delete("/instruments/9999")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+class TestGetInstrumentPrices:
+    """Tests for GET /instruments/{id}/prices endpoint."""
+
+    def test_get_prices_empty(
+        self,
+        client: TestClient,
+        session: Session,
+    ):
+        """Should return empty list when no prices exist."""
+        # Arrange
+        instrument = Instrument(
+            symbol="AAPL",
+            name="Apple Inc.",
+            instrument_type=InstrumentType.STOCK,
+            exchange="NASDAQ",
+        )
+        session.add(instrument)
+        session.commit()
+        session.refresh(instrument)
+
+        # Act
+        response = client.get(f"/instruments/{instrument.id}/prices")
+
+        # Assert
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == []
+
+    def test_get_prices_returns_all(
+        self,
+        client: TestClient,
+        session: Session,
+    ):
+        """Should return all prices for an instrument."""
+        from datetime import datetime, timezone
+        from decimal import Decimal
+
+        # Arrange
+        instrument = Instrument(
+            symbol="AAPL",
+            name="Apple Inc.",
+            instrument_type=InstrumentType.STOCK,
+            exchange="NASDAQ",
+        )
+        session.add(instrument)
+        session.commit()
+        session.refresh(instrument)
+
+        price1 = MarketPrice(
+            instrument_id=instrument.id,
+            timestamp=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),
+            open=Decimal("185.00"),
+            high=Decimal("186.00"),
+            low=Decimal("184.00"),
+            close=Decimal("185.50"),
+            volume=1000000,
+        )
+        price2 = MarketPrice(
+            instrument_id=instrument.id,
+            timestamp=datetime(2024, 1, 15, 11, 0, tzinfo=timezone.utc),
+            open=Decimal("185.50"),
+            high=Decimal("187.00"),
+            low=Decimal("185.00"),
+            close=Decimal("186.00"),
+            volume=1200000,
+        )
+        session.add_all([price1, price2])
+        session.commit()
+
+        # Act
+        response = client.get(f"/instruments/{instrument.id}/prices")
+
+        # Assert
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 2
+
+    def test_get_prices_with_limit(
+        self,
+        client: TestClient,
+        session: Session,
+    ):
+        """Should respect limit parameter."""
+        from datetime import datetime, timezone
+        from decimal import Decimal
+
+        # Arrange
+        instrument = Instrument(
+            symbol="AAPL",
+            name="Apple Inc.",
+            instrument_type=InstrumentType.STOCK,
+            exchange="NASDAQ",
+        )
+        session.add(instrument)
+        session.commit()
+        session.refresh(instrument)
+
+        # Add 5 prices
+        for i in range(5):
+            price = MarketPrice(
+                instrument_id=instrument.id,
+                timestamp=datetime(2024, 1, 15, 10 + i, 0, tzinfo=timezone.utc),
+                open=Decimal("185.00"),
+                high=Decimal("186.00"),
+                low=Decimal("184.00"),
+                close=Decimal("185.50"),
+                volume=1000000 + i,
+            )
+            session.add(price)
+        session.commit()
+
+        # Act
+        response = client.get(f"/instruments/{instrument.id}/prices?limit=3")
+
+        # Assert
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 3
+
+    def test_get_prices_instrument_not_found(self, client: TestClient):
+        """Should return 404 when instrument not found."""
+        response = client.get("/instruments/9999/prices")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND

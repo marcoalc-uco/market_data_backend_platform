@@ -5,11 +5,15 @@ This module provides CRUD operations for financial instruments.
 
 from fastapi import APIRouter, HTTPException, status
 
-from market_data_backend_platform.api.dependencies import InstrumentRepoDep
+from market_data_backend_platform.api.dependencies import (
+    InstrumentRepoDep,
+    MarketPriceRepoDep,
+)
 from market_data_backend_platform.schemas import (
     InstrumentCreate,
     InstrumentResponse,
     InstrumentUpdate,
+    MarketPriceResponse,
 )
 
 router = APIRouter()
@@ -144,3 +148,36 @@ def delete_instrument(
         )
 
     repo.delete(instrument)
+
+
+@router.get("/{instrument_id}/prices", response_model=list[MarketPriceResponse])
+def get_instrument_prices(
+    instrument_id: int,
+    instrument_repo: InstrumentRepoDep,
+    price_repo: MarketPriceRepoDep,
+    limit: int | None = None,
+) -> list[MarketPriceResponse]:
+    """Get price history for an instrument.
+
+    Args:
+        instrument_id: ID of the instrument.
+        instrument_repo: InstrumentRepository from dependency injection.
+        price_repo: MarketPriceRepository from dependency injection.
+        limit: Optional maximum number of prices to return.
+
+    Returns:
+        List of price records for the instrument.
+
+    Raises:
+        HTTPException: 404 if instrument not found.
+    """
+    # Verify instrument exists
+    instrument = instrument_repo.get_by_id(instrument_id)
+    if not instrument:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Instrument with id {instrument_id} not found",
+        )
+
+    prices = price_repo.get_by_instrument(instrument_id, limit=limit)
+    return [MarketPriceResponse.model_validate(p) for p in prices]
