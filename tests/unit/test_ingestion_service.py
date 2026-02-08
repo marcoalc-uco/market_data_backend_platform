@@ -99,7 +99,7 @@ class TestIngestionService:
         # Arrange
         mock_instrument_repo.get_by_symbol.return_value = sample_instrument
         mock_yahoo_client.get_historical_prices.return_value = sample_quotes
-        mock_price_repo.bulk_create.return_value = []  # Not important for this test
+        mock_price_repo.bulk_create_new.return_value = [None, None]  # Mock 2 inserted
 
         service = IngestionService(
             instrument_repo=mock_instrument_repo,
@@ -116,7 +116,7 @@ class TestIngestionService:
         mock_yahoo_client.get_historical_prices.assert_called_once_with(
             symbol="AAPL", interval="1d", period="1mo"
         )
-        mock_price_repo.bulk_create.assert_called_once()
+        mock_price_repo.bulk_create_new.assert_called_once()
 
     def test_ingest_by_symbol_instrument_not_found(
         self,
@@ -174,4 +174,4 @@ class TestIngestionService:
 
         # Assert
         assert count == 0
-        mock_price_repo.bulk_create.assert_not_called()
+        mock_price_repo.bulk_create_new.assert_not_called()

@@ -111,3 +111,62 @@ class MarketPriceRepository(BaseRepository[MarketPrice]):
         for price in prices:
             self.session.refresh(price)
         return prices
+
+    def get_existing_timestamps(
+        self,
+        instrument_id: int,
+        timestamps: list[datetime],
+    ) -> set[datetime]:
+        """Get timestamps that already exist in the database.
+
+        This is used for idempotent insertion to avoid duplicates.
+
+        Args:
+            instrument_id: ID of the instrument.
+            timestamps: List of timestamps to check.
+
+        Returns:
+            Set of timestamps that already exist in the database.
+        """
+        if not timestamps:
+            return set()
+
+        existing = (
+            self.session.query(MarketPrice.timestamp)
+            .filter(
+                MarketPrice.instrument_id == instrument_id,
+                MarketPrice.timestamp.in_(timestamps),
+            )
+            .all()
+        )
+        return {row[0] for row in existing}
+
+    def bulk_create_new(self, prices: list[MarketPrice]) -> list[MarketPrice]:
+        """Create only prices that don't already exist (idempotent).
+
+        Filters out prices with timestamps that already exist for the
+        same instrument, then inserts only the new ones.
+
+        Args:
+            prices: List of MarketPrice instances to potentially persist.
+
+        Returns:
+            Only the newly inserted MarketPrice instances.
+        """
+        if not prices:
+            return []
+
+        # Group by instrument_id to check each separately
+        instrument_id = prices[0].instrument_id
+        timestamps = [p.timestamp for p in prices]
+
+        # Get existing timestamps
+        existing = self.get_existing_timestamps(instrument_id, timestamps)
+
+        # Filter to only new prices
+        new_prices = [p for p in prices if p.timestamp not in existing]
+
+        if not new_prices:
+            return []
+
+        return self.bulk_create(new_prices)

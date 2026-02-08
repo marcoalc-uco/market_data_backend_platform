@@ -124,14 +124,16 @@ class IngestionService:
             for schema in schemas
         ]
 
-        # Step 5: Persist to database
-        self.price_repo.bulk_create(prices)
+        # Step 5: Persist to database (idempotent - skips existing)
+        inserted_prices = self.price_repo.bulk_create_new(prices)
 
         logger.info(
             "ingestion_complete",
             symbol=symbol,
-            count=len(prices),
+            fetched=len(prices),
+            inserted=len(inserted_prices),
+            skipped=len(prices) - len(inserted_prices),
             instrument_id=instrument.id,
         )
 
-        return len(prices)
+        return len(inserted_prices)
