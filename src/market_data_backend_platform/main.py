@@ -21,6 +21,7 @@ from market_data_backend_platform.core import (
     settings,
     setup_logging,
 )
+from market_data_backend_platform.scheduler import shutdown_scheduler, start_scheduler
 
 
 @asynccontextmanager
@@ -42,9 +43,19 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         debug=settings.debug,
     )
 
+    # Start scheduler if enabled
+    if settings.scheduler_enabled:
+        start_scheduler(settings.ingestion_interval_minutes)
+        logger.info(
+            "scheduler_enabled",
+            interval_minutes=settings.ingestion_interval_minutes,
+        )
+
     yield  # Application runs here
 
     # Shutdown
+    if settings.scheduler_enabled:
+        shutdown_scheduler()
     logger.info("application_stopped")
 
 

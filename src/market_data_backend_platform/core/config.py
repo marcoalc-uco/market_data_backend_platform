@@ -85,6 +85,17 @@ class Settings(BaseSettings):
         description="Maximum overflow connections beyond pool size",
     )
 
+    # Scheduler
+    ingestion_interval_minutes: int = Field(
+        default=60,
+        ge=1,
+        description="Interval in minutes between automated ingestion runs",
+    )
+    scheduler_enabled: bool = Field(
+        default=True,
+        description="Enable automated data ingestion scheduler",
+    )
+
     @computed_field
     def database_url(self) -> str:
         """Compute full PostgreSQL connection URL from individual fields.

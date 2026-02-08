@@ -137,3 +137,60 @@ class IngestionService:
         )
 
         return len(inserted_prices)
+
+    def ingest_all_active(
+        self,
+        interval: str = "1d",
+        period: str = "1mo",
+    ) -> dict[str, int]:
+        """Ingest historical prices for all active instruments.
+
+        Iterates over all instruments marked as active and ingests
+        their historical data. This is designed to be called by
+        the scheduler.
+
+        Args:
+            interval: Data interval (1d, 1wk, 1mo).
+            period: Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 5y, max).
+
+        Returns:
+            Summary dict with total_instruments, total_inserted, failed.
+        """
+        active_instruments = self.instrument_repo.get_active()
+
+        logger.info(
+            "ingestion_batch_start",
+            instrument_count=len(active_instruments),
+        )
+
+        total_inserted = 0
+        failed = 0
+
+        for instrument in active_instruments:
+            try:
+                inserted = self.ingest_by_symbol(
+                    symbol=instrument.symbol,
+                    interval=interval,
+                    period=period,
+                )
+                total_inserted += inserted
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.error(
+                    "ingestion_failed",
+                    symbol=instrument.symbol,
+                    error=str(exc),
+                )
+                failed += 1
+
+        logger.info(
+            "ingestion_batch_complete",
+            total_instruments=len(active_instruments),
+            total_inserted=total_inserted,
+            failed=failed,
+        )
+
+        return {
+            "total_instruments": len(active_instruments),
+            "total_inserted": total_inserted,
+            "failed": failed,
+        }

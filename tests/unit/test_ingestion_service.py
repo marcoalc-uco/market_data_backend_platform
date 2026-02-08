@@ -175,3 +175,45 @@ class TestIngestionService:
         # Assert
         assert count == 0
         mock_price_repo.bulk_create_new.assert_not_called()
+
+    def test_ingest_all_active_iterates_instruments(
+        self,
+        mock_instrument_repo: MagicMock,
+        mock_price_repo: MagicMock,
+        mock_yahoo_client: MagicMock,
+        sample_quotes: list[YahooQuoteResponse],
+    ) -> None:
+        """Should ingest prices for all active instruments.
+
+        Given: Multiple active instruments exist
+        When: We call ingest_all_active
+        Then: It ingests data for each instrument
+        """
+        # Arrange: Two active instruments
+        instrument1 = MagicMock()
+        instrument1.id = 1
+        instrument1.symbol = "AAPL"
+
+        instrument2 = MagicMock()
+        instrument2.id = 2
+        instrument2.symbol = "GOOGL"
+
+        mock_instrument_repo.get_active.return_value = [instrument1, instrument2]
+        mock_instrument_repo.get_by_symbol.side_effect = [instrument1, instrument2]
+        mock_yahoo_client.get_historical_prices.return_value = sample_quotes
+        mock_price_repo.bulk_create_new.return_value = [None, None]
+
+        service = IngestionService(
+            instrument_repo=mock_instrument_repo,
+            price_repo=mock_price_repo,
+            yahoo_client=mock_yahoo_client,
+        )
+
+        # Act
+        result = service.ingest_all_active()
+
+        # Assert
+        assert result["total_instruments"] == 2
+        assert result["total_inserted"] == 4  # 2 quotes x 2 instruments
+        mock_instrument_repo.get_active.assert_called_once()
+        assert mock_yahoo_client.get_historical_prices.call_count == 2
