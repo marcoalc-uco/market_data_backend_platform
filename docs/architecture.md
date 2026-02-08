@@ -39,6 +39,13 @@ La arquitectura está diseñada para:
 - **PEP 484/585**: Type hints.
 - **PEP 621**: Metadata en `pyproject.toml`.
 
+### Virtual Environment
+
+- **venv**: Entorno virtual.
+- **pip**: Gestor de paquetes.
+- **requirements.txt**: Dependencias.
+- Utiliza siempre .venv
+
 ---
 
 ## Stack tecnológico
