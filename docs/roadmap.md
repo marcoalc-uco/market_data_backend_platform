@@ -266,6 +266,6 @@ Tareas:
 - [x] Fase 3 — Modelado y persistencia
 - [x] Fase 4 — Ingestión de datos (ETL)
 - [x] Fase 5 — API REST de consulta
-- [/] Fase 6 — Visualización con Grafana
+- [x] Fase 6 — Visualización con Grafana
 - [ ] Fase 7 — Dockerización y despliegue local
 - [ ] Fase 8 — CI/CD y documentación final
