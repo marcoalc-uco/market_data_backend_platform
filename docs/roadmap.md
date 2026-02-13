@@ -263,9 +263,9 @@ Tareas:
 - [x] Fase 0 — Diseño y arquitectura
 - [x] Fase 1 — Setup del proyecto
 - [x] Fase 2 — Backend base (FastAPI)
-- [/] Fase 3 — Modelado y persistencia
-- [ ] Fase 4 — Ingestión de datos (ETL)
-- [ ] Fase 5 — API REST de consulta
-- [ ] Fase 6 — Visualización con Grafana
+- [x] Fase 3 — Modelado y persistencia
+- [x] Fase 4 — Ingestión de datos (ETL)
+- [x] Fase 5 — API REST de consulta
+- [/] Fase 6 — Visualización con Grafana
 - [ ] Fase 7 — Dockerización y despliegue local
 - [ ] Fase 8 — CI/CD y documentación final
