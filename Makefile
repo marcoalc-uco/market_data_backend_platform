@@ -1,12 +1,15 @@
 # Makefile for Market Data Backend Platform
 
-.PHONY: dev test db-migrate db-upgrade db-downgrade clean help
+.PHONY: dev test test-all test-cov freeze db-migrate db-upgrade db-downgrade db-status clean help
 
 # Default target
 help:
 	@echo Available commands:
 	@echo   make dev          - Start development server
 	@echo   make test         - Run unit tests
+	@echo   make test-all     - Run all tests including integration
+	@echo   make test-cov     - Run tests with coverage report
+	@echo   make freeze       - Update requirements.txt from virtual environment
 	@echo   make db-migrate   - Generate Alembic migration (requires PostgreSQL)
 	@echo   make db-upgrade   - Apply pending migrations
 	@echo   make db-downgrade - Revert last migration
@@ -23,6 +26,14 @@ test:
 # Run all tests including integration (when available)
 test-all:
 	.\.venv\Scripts\pytest.exe tests/ -v
+
+# Run tests with coverage report
+test-cov:
+	.\.venv\Scripts\pytest.exe --cov=src --cov-report=term-missing --cov-report=html
+
+# Freeze dependencies into requirements.txt (guarantees UTF-8 and LF)
+freeze:
+	.\.venv\Scripts\python.exe -c "import subprocess; out = subprocess.check_output([r'.\.venv\Scripts\pip.exe', 'freeze', '--exclude-editable']); open('requirements.txt', 'wb').write(out.replace(b'\r\n', b'\n'))"
 
 # Generate new Alembic migration (autogenerate from model changes)
 # Usage: make db-migrate msg="add user table"

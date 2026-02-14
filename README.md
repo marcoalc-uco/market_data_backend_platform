@@ -33,28 +33,23 @@ cd market_data_backend_platform
 
 ### 2. Configure Environment
 
-Copy the Docker environment template:
+Copy the environment template and customize if needed:
 
 ```bash
-cp docker/.env.docker .env
+cp .env.example .env
 ```
 
-Edit `.env` to customize credentials (optional):
+The `.env` file works for both:
 
-```env
-# PostgreSQL Configuration
-POSTGRES_USER=market_data
-POSTGRES_PASSWORD=market_data_pass
-POSTGRES_DB=market_data
+- **Local development**: Python running on your machine (connects to `localhost:5432`)
+- **Docker Compose**: All services running in containers (internal networking)
 
-# Grafana Configuration
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
+Default credentials for quick start:
 
-# API Configuration
-DEBUG=false
-LOG_LEVEL=INFO
-```
+- **PostgreSQL**: `market_data` / `market_data_pass`
+- **Grafana**: `admin` / `admin`
+
+> **Note**: For production, change all default passwords!
 
 ### 3. Start Services
 

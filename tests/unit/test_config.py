@@ -121,3 +121,20 @@ class TestDatabaseSettings:
         assert hasattr(settings, "db_max_overflow")
         assert isinstance(settings.db_max_overflow, int)
         assert settings.db_max_overflow >= 0
+
+
+class TestSchedulerSettings:
+    """Test cases for scheduler configuration fields."""
+
+    def test_settings_has_scheduler_enabled(self) -> None:
+        """Test that settings has scheduler_enabled attribute."""
+        settings = Settings()
+        assert hasattr(settings, "scheduler_enabled")
+        assert isinstance(settings.scheduler_enabled, bool)
+
+    def test_settings_has_ingestion_interval_minutes(self) -> None:
+        """Test that settings has ingestion_interval_minutes attribute."""
+        settings = Settings()
+        assert hasattr(settings, "ingestion_interval_minutes")
+        assert isinstance(settings.ingestion_interval_minutes, int)
+        assert settings.ingestion_interval_minutes >= 1
