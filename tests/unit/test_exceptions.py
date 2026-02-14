@@ -1,7 +1,6 @@
 """Unit tests for custom exceptions.
 
 These tests validate the exception hierarchy and behavior.
-Following TDD: write tests first, then implement exceptions.py to pass them.
 """
 
 import pytest

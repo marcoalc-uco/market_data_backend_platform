@@ -1,6 +1,6 @@
 """Tests for Instrument model.
 
-Following TDD: These tests verify the Instrument model and InstrumentType enum.
+These tests verify the Instrument model and InstrumentType enum.
 Tests use SQLite in-memory for unit test independence.
 """
 

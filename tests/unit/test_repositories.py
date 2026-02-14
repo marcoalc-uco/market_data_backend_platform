@@ -1,6 +1,5 @@
 """Tests for Repository Pattern implementation.
 
-Following TDD: These tests are written FIRST, before implementation.
 Tests use SQLite in-memory for unit test independence.
 """
 
@@ -240,3 +239,139 @@ class TestInstrumentRepository:
 
         assert len(stocks) == 1
         assert stocks[0].symbol == "AAPL"
+
+
+class TestMarketPriceRepository:
+    """Tests for MarketPriceRepository-specific methods."""
+
+    @pytest.fixture
+    def sample_instrument(self, test_session: Session) -> "Instrument":
+        """Create a sample instrument for price tests."""
+        from market_data_backend_platform.models import Instrument, InstrumentType
+        from market_data_backend_platform.repositories import InstrumentRepository
+
+        repo = InstrumentRepository(test_session)
+        return repo.create(
+            Instrument(
+                symbol="AAPL",
+                name="Apple Inc.",
+                instrument_type=InstrumentType.STOCK,
+                exchange="NASDAQ",
+            )
+        )
+
+    def test_get_existing_timestamps(
+        self, test_session: Session, sample_instrument: "Instrument"
+    ) -> None:
+        """Test getting existing timestamps for an instrument.
+
+        This is key for idempotent insertion.
+        """
+        from datetime import datetime, timezone
+
+        from market_data_backend_platform.models import MarketPrice
+        from market_data_backend_platform.repositories import MarketPriceRepository
+
+        repo = MarketPriceRepository(test_session)
+
+        # Create some existing prices (use naive datetimes for SQLite compatibility)
+        ts1 = datetime(2024, 1, 15)
+        ts2 = datetime(2024, 1, 16)
+
+        repo.bulk_create(
+            [
+                MarketPrice(
+                    instrument_id=sample_instrument.id,
+                    timestamp=ts1,
+                    open=185.00,
+                    high=186.00,
+                    low=184.00,
+                    close=185.50,
+                    volume=1000000,
+                ),
+                MarketPrice(
+                    instrument_id=sample_instrument.id,
+                    timestamp=ts2,
+                    open=186.00,
+                    high=187.00,
+                    low=185.00,
+                    close=186.50,
+                    volume=1100000,
+                ),
+            ]
+        )
+
+        # Act: Get existing timestamps
+        existing = repo.get_existing_timestamps(
+            instrument_id=sample_instrument.id,
+            timestamps=[ts1, ts2, datetime(2024, 1, 17)],
+        )
+
+        # Assert: Only ts1 and ts2 should be returned
+        assert len(existing) == 2
+        assert ts1 in existing
+        assert ts2 in existing
+
+    def test_bulk_create_new_filters_duplicates(
+        self, test_session: Session, sample_instrument: "Instrument"
+    ) -> None:
+        """Test that bulk_create_new only inserts non-existing prices.
+
+        This ensures idempotent behavior.
+        """
+        from datetime import datetime
+
+        from market_data_backend_platform.models import MarketPrice
+        from market_data_backend_platform.repositories import MarketPriceRepository
+
+        repo = MarketPriceRepository(test_session)
+
+        # Pre-existing price (use naive datetime for SQLite)
+        ts_existing = datetime(2024, 1, 15)
+        repo.bulk_create(
+            [
+                MarketPrice(
+                    instrument_id=sample_instrument.id,
+                    timestamp=ts_existing,
+                    open=185.00,
+                    high=186.00,
+                    low=184.00,
+                    close=185.50,
+                    volume=1000000,
+                ),
+            ]
+        )
+
+        # New prices to insert (one duplicate, one new)
+        ts_new = datetime(2024, 1, 16)
+        new_prices = [
+            MarketPrice(
+                instrument_id=sample_instrument.id,
+                timestamp=ts_existing,  # Duplicate!
+                open=999.00,
+                high=999.00,
+                low=999.00,
+                close=999.00,
+                volume=999,
+            ),
+            MarketPrice(
+                instrument_id=sample_instrument.id,
+                timestamp=ts_new,  # New
+                open=186.00,
+                high=187.00,
+                low=185.00,
+                close=186.50,
+                volume=1100000,
+            ),
+        ]
+
+        # Act: Insert with idempotent method
+        inserted = repo.bulk_create_new(new_prices)
+
+        # Assert: Only the new price was inserted
+        assert len(inserted) == 1
+        assert inserted[0].timestamp == ts_new
+
+        # Verify total count in DB
+        all_prices = repo.get_by_instrument(sample_instrument.id)
+        assert len(all_prices) == 2  # Original + 1 new (not 3!)

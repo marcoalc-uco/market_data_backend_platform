@@ -14,13 +14,14 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from market_data_backend_platform.api.routes import health
+from market_data_backend_platform.api.routes import health, instruments, prices
 from market_data_backend_platform.core import (
     MarketDataError,
     get_logger,
     settings,
     setup_logging,
 )
+from market_data_backend_platform.scheduler import shutdown_scheduler, start_scheduler
 
 
 @asynccontextmanager
@@ -42,9 +43,19 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         debug=settings.debug,
     )
 
+    # Start scheduler if enabled
+    if settings.scheduler_enabled:
+        start_scheduler(settings.ingestion_interval_minutes)
+        logger.info(
+            "scheduler_enabled",
+            interval_minutes=settings.ingestion_interval_minutes,
+        )
+
     yield  # Application runs here
 
     # Shutdown
+    if settings.scheduler_enabled:
+        shutdown_scheduler()
     logger.info("application_stopped")
 
 
@@ -71,6 +82,10 @@ app.add_middleware(
 # Register routers
 # Health endpoint at /health
 app.include_router(health.router)
+# Instruments CRUD at /instruments
+app.include_router(instruments.router, prefix="/instruments", tags=["instruments"])
+# Prices query at /prices
+app.include_router(prices.router, prefix="/prices", tags=["prices"])
 
 
 # Global exception handler for MarketDataError

@@ -1,6 +1,6 @@
 """Tests for SQLAlchemy model base classes and mixins.
 
-Following TDD: These tests verify Base and TimestampMixin.
+These tests verify Base and TimestampMixin.
 Tests use SQLite in-memory for independence from PostgreSQL.
 """
 

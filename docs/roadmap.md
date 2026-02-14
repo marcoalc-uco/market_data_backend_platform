@@ -149,10 +149,13 @@ Tareas:
 - Inserción idempotente.
 - Logging estructurado de operaciones.
 
-Opcional:
+Activación de ingestión (elegir una):
 
-- Programación de tareas (APScheduler).
-- Endpoint manual `/ingest/run`.
+- **Opción A: Automatizada** — APScheduler ejecuta ingestión cada X minutos.
+  - Ideal para backends sin intervención manual.
+  - Scheduler se inicia con FastAPI.
+- **Opción B: Manual** — Endpoint `/ingest/run` dispara ingestión bajo demanda.
+  - Ideal para control explícito desde UI o herramientas externas.
 
 **Principios aplicados:**
 
@@ -260,9 +263,9 @@ Tareas:
 - [x] Fase 0 — Diseño y arquitectura
 - [x] Fase 1 — Setup del proyecto
 - [x] Fase 2 — Backend base (FastAPI)
-- [/] Fase 3 — Modelado y persistencia
-- [ ] Fase 4 — Ingestión de datos (ETL)
-- [ ] Fase 5 — API REST de consulta
-- [ ] Fase 6 — Visualización con Grafana
+- [x] Fase 3 — Modelado y persistencia
+- [x] Fase 4 — Ingestión de datos (ETL)
+- [x] Fase 5 — API REST de consulta
+- [x] Fase 6 — Visualización con Grafana
 - [ ] Fase 7 — Dockerización y despliegue local
 - [ ] Fase 8 — CI/CD y documentación final
