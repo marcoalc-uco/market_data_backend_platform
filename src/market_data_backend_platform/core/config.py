@@ -87,7 +87,7 @@ class Settings(BaseSettings):
 
     # Scheduler
     ingestion_interval_minutes: int = Field(
-        default=1,
+        default=5,
         ge=1,
         description="Interval in minutes between automated ingestion runs",
     )

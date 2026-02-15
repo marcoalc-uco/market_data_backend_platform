@@ -4,6 +4,8 @@ Tests the containerized FastAPI application end-to-end.
 Verifies API health, database connectivity, and CRUD operations.
 """
 
+import uuid
+
 import httpx
 import pytest
 
@@ -36,8 +38,9 @@ class TestInstrumentsCRUD:
 
     def test_create_instrument(self, api_client: httpx.Client) -> None:
         """Test creating a new instrument."""
+        unique_symbol = f"TEST_{uuid.uuid4().hex[:8].upper()}"
         instrument_data = {
-            "symbol": "TEST",
+            "symbol": unique_symbol,
             "name": "Test Instrument",
             "instrument_type": "stock",
             "exchange": "NASDAQ",
@@ -47,7 +50,7 @@ class TestInstrumentsCRUD:
         assert response.status_code == 201
 
         data = response.json()
-        assert data["symbol"] == "TEST"
+        assert data["symbol"] == unique_symbol
         assert data["name"] == "Test Instrument"
         assert data["instrument_type"] == "stock"
         assert "id" in data
@@ -55,8 +58,9 @@ class TestInstrumentsCRUD:
     def test_get_instrument_by_id(self, api_client: httpx.Client) -> None:
         """Test retrieving instrument by ID."""
         # First create an instrument
+        unique_symbol = f"GET_{uuid.uuid4().hex[:8].upper()}"
         instrument_data = {
-            "symbol": "GETTEST",
+            "symbol": unique_symbol,
             "name": "Get Test Instrument",
             "instrument_type": "stock",
             "exchange": "NASDAQ",
@@ -69,7 +73,7 @@ class TestInstrumentsCRUD:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["symbol"] == "GETTEST"
+        assert data["symbol"] == unique_symbol
         assert data["id"] == instrument_id
 
     def test_get_nonexistent_instrument(self, api_client: httpx.Client) -> None:
@@ -84,8 +88,9 @@ class TestMarketPrices:
     def test_get_prices_for_instrument(self, api_client: httpx.Client) -> None:
         """Test retrieving prices for a specific instrument."""
         # First create an instrument
+        unique_symbol = f"PRICE_{uuid.uuid4().hex[:8].upper()}"
         instrument_data = {
-            "symbol": "PRICETEST",
+            "symbol": unique_symbol,
             "name": "Price Test Instrument",
             "instrument_type": "stock",
             "exchange": "NASDAQ",
@@ -108,8 +113,9 @@ class TestMarketPrices:
     def test_get_latest_price_no_data(self, api_client: httpx.Client) -> None:
         """Test getting latest price when no prices exist returns 404."""
         # First create an instrument
+        unique_symbol = f"LATEST_{uuid.uuid4().hex[:8].upper()}"
         instrument_data = {
-            "symbol": "LATEST",
+            "symbol": unique_symbol,
             "name": "Latest Test Instrument",
             "instrument_type": "stock",
             "exchange": "NASDAQ",

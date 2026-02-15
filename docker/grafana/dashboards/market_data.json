@@ -104,7 +104,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  mp.timestamp AS time,\n  mp.close AS value,\n  i.symbol AS metric\nFROM market_prices mp\nJOIN instruments i ON mp.instrument_id = i.id\nWHERE\n  i.asset_type = '${asset_type}'\n  AND mp.timestamp >= $__timeFrom()\n  AND mp.timestamp <= $__timeTo()\nORDER BY mp.timestamp ASC",
+          "rawSql": "SELECT\n  mp.timestamp AS time,\n  mp.close AS value,\n  i.symbol AS metric\nFROM market_prices mp\nJOIN instruments i ON mp.instrument_id = i.id\nWHERE\n  i.instrument_type = '${asset_type}'\n  AND mp.timestamp >= $__timeFrom()\n  AND mp.timestamp <= $__timeTo()\nORDER BY mp.timestamp ASC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -210,7 +210,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  mp.timestamp AS time,\n  mp.volume AS value,\n  i.symbol AS metric\nFROM market_prices mp\nJOIN instruments i ON mp.instrument_id = i.id\nWHERE\n  i.asset_type = '${asset_type}'\n  AND mp.timestamp >= $__timeFrom()\n  AND mp.timestamp <= $__timeTo()\nORDER BY mp.timestamp ASC",
+          "rawSql": "SELECT\n  mp.timestamp AS time,\n  mp.volume AS value,\n  i.symbol AS metric\nFROM market_prices mp\nJOIN instruments i ON mp.instrument_id = i.id\nWHERE\n  i.instrument_type = '${asset_type}'\n  AND mp.timestamp >= $__timeFrom()\n  AND mp.timestamp <= $__timeTo()\nORDER BY mp.timestamp ASC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -328,7 +328,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  i.symbol,\n  i.name,\n  i.asset_type,\n  mp.timestamp,\n  mp.open,\n  mp.high,\n  mp.low,\n  mp.close,\n  mp.volume\nFROM instruments i\nJOIN LATERAL (\n  SELECT *\n  FROM market_prices\n  WHERE instrument_id = i.id\n  ORDER BY timestamp DESC\n  LIMIT 1\n) mp ON true\nWHERE i.asset_type = '${asset_type}'\nORDER BY mp.timestamp DESC",
+          "rawSql": "SELECT\n  i.symbol,\n  i.name,\n  i.instrument_type,\n  mp.timestamp,\n  mp.open,\n  mp.high,\n  mp.low,\n  mp.close,\n  mp.volume\nFROM instruments i\nJOIN LATERAL (\n  SELECT *\n  FROM market_prices\n  WHERE instrument_id = i.id\n  ORDER BY timestamp DESC\n  LIMIT 1\n) mp ON true\nWHERE i.instrument_type = '${asset_type}'\nORDER BY mp.timestamp DESC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -369,14 +369,14 @@
           "type": "postgres",
           "uid": "PostgreSQL"
         },
-        "definition": "SELECT DISTINCT asset_type FROM instruments ORDER BY asset_type",
+        "definition": "SELECT DISTINCT instrument_type FROM instruments ORDER BY instrument_type",
         "hide": 0,
         "includeAll": false,
         "label": "Asset Type",
         "multi": false,
         "name": "asset_type",
         "options": [],
-        "query": "SELECT DISTINCT asset_type FROM instruments ORDER BY asset_type",
+        "query": "SELECT DISTINCT instrument_type FROM instruments ORDER BY instrument_type",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

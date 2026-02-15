@@ -18,14 +18,28 @@ def docker_compose_up() -> Generator[None, None, None]:
     """Start Docker Compose services for integration tests.
 
     This fixture:
-    1. Starts all services defined in docker-compose.yml
-    2. Waits for services to be healthy
-    3. Yields control to tests
-    4. Tears down services after all tests complete
+    1. Uses docker-compose.test.yml (separate from production)
+    2. Stops and removes any existing TEST containers/volumes (clean slate)
+    3. Starts all TEST services
+    4. Waits for services to be healthy
+    5. Yields control to tests
+    6. Optionally tears down TEST services after all tests complete
+
+    NOTE: This uses separate containers/volumes/ports from production:
+    - postgres_test (port 5433) instead of postgres (port 5432)
+    - api_test (port 8001) instead of api (port 8000)
+    - Volume: postgres_test_data instead of postgres_data
     """
-    # Start services
+    # Clean up any existing TEST containers and volumes for fresh start
     subprocess.run(
-        ["docker-compose", "up", "-d"],
+        ["docker-compose", "-f", "docker-compose.test.yml", "down", "-v"],
+        check=False,  # Don't fail if nothing to stop
+        capture_output=True,
+    )
+
+    # Start TEST services with fresh volumes
+    subprocess.run(
+        ["docker-compose", "-f", "docker-compose.test.yml", "up", "-d"],
         check=True,
         capture_output=True,
     )
@@ -54,25 +68,26 @@ def docker_compose_up() -> Generator[None, None, None]:
 
     yield
 
-    # Teardown: stop services
+    # Teardown: stop TEST services and remove volumes
+    # This cleans up test data but does NOT affect production
     subprocess.run(
-        ["docker-compose", "down"],
+        ["docker-compose", "-f", "docker-compose.test.yml", "down", "-v"],
         check=False,  # Don't fail if already down
         capture_output=True,
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def api_client(docker_compose_up: None) -> Generator[httpx.Client, None, None]:
-    """HTTP client for the containerized API.
+    """HTTP client for the containerized TEST API.
 
     Args:
-        docker_compose_up: Ensures Docker services are running
+        docker_compose_up: Ensures Docker TEST services are running
 
     Yields:
-        Configured httpx.Client pointing to the API
+        Configured httpx.Client pointing to the TEST API (port 8001)
     """
-    base_url = "http://localhost:8000"
+    base_url = "http://localhost:8001"  # TEST API on different port
 
     # Wait for API to be ready
     max_retries = 30
@@ -93,19 +108,19 @@ def api_client(docker_compose_up: None) -> Generator[httpx.Client, None, None]:
         yield client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def db_connection(
     docker_compose_up: None,
 ) -> Generator[psycopg2.extensions.connection, None, None]:
-    """Direct PostgreSQL connection for data verification.
+    """Direct PostgreSQL connection for TEST data verification.
 
     Args:
-        docker_compose_up: Ensures Docker services are running
+        docker_compose_up: Ensures Docker TEST services are running
 
     Yields:
-        psycopg2 connection to the containerized database
+        psycopg2 connection to the containerized TEST database (port 5433)
     """
-    # Wait for PostgreSQL to be ready
+    # Wait for TEST PostgreSQL to be ready
     max_retries = 30
     conn = None
 
@@ -113,7 +128,7 @@ def db_connection(
         try:
             conn = psycopg2.connect(
                 host="localhost",
-                port=5432,
+                port=5433,  # TEST database on different port
                 user="market_data",
                 password="market_data_pass",
                 database="market_data",
@@ -123,7 +138,7 @@ def db_connection(
             time.sleep(1)
 
             if i == max_retries - 1:
-                raise RuntimeError("PostgreSQL failed to become ready")
+                raise RuntimeError("TEST PostgreSQL failed to become ready")
 
     if conn is None:
         raise RuntimeError("Failed to establish database connection")
