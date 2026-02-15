@@ -28,6 +28,7 @@ services:
       API_PREFIX: /api/v1
       DEBUG: ${DEBUG:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      INGESTION_INTERVAL_MINUTES: ${INGESTION_INTERVAL_MINUTES:-5}
     ports:
       - "8000:8000"
     depends_on:
