@@ -53,8 +53,9 @@ def verify_settings() -> bool:
     print(f"  DB_NAME: {settings.db_name}")
     print(f"  DB_POOL_SIZE: {settings.db_pool_size}")
     print(f"  DB_MAX_OVERFLOW: {settings.db_max_overflow}")
+    db_url = settings.get_database_url()
     print(
-        f"  DATABASE_URL: {settings.database_url.replace(settings.db_password, '***') if settings.db_password else settings.database_url}"
+        f"  DATABASE_URL: {db_url.replace(settings.db_password, '***') if settings.db_password else db_url}"
     )
     print()
 

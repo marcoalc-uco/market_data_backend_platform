@@ -62,7 +62,7 @@ class Instrument(TimestampMixin, Base):
         nullable=False,
     )
     instrument_type: Mapped[InstrumentType] = mapped_column(
-        Enum(InstrumentType),
+        Enum(InstrumentType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
     exchange: Mapped[str] = mapped_column(

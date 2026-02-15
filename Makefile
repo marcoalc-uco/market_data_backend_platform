@@ -1,15 +1,18 @@
 # Makefile for Market Data Backend Platform
 
-.PHONY: dev test test-all test-cov freeze db-migrate db-upgrade db-downgrade db-status clean help
+.PHONY: dev test test-all test-cov test-integration docker-up docker-down freeze db-migrate db-upgrade db-downgrade db-status clean help
 
 # Default target
 help:
 	@echo Available commands:
 	@echo   make dev          - Start development server
 	@echo   make test         - Run unit tests
-	@echo   make test-all     - Run all tests including integration
-	@echo   make test-cov     - Run tests with coverage report
-	@echo   make freeze       - Update requirements.txt from virtual environment
+	@echo   make test-all         - Run all tests including integration
+	@echo   make test-cov         - Run tests with coverage report
+	@echo   make test-integration - Run integration tests with Docker
+	@echo   make docker-up        - Start Docker Compose services
+	@echo   make docker-down      - Stop Docker Compose services
+	@echo   make freeze           - Update requirements.txt from virtual environment
 	@echo   make db-migrate   - Generate Alembic migration (requires PostgreSQL)
 	@echo   make db-upgrade   - Apply pending migrations
 	@echo   make db-downgrade - Revert last migration
@@ -30,6 +33,28 @@ test-all:
 # Run tests with coverage report
 test-cov:
 	.\.venv\Scripts\pytest.exe --cov=src --cov-report=term-missing --cov-report=html
+
+# Run integration tests (requires Docker)
+test-integration:
+	@echo Starting Docker Compose services...
+	docker-compose up -d
+	@echo Waiting for services to be ready...
+	@timeout /t 10 /nobreak >nul
+	@echo Running integration tests...
+	.\.venv\Scripts\pytest.exe tests/integration/ -v
+	@echo Stopping Docker Compose services...
+	docker-compose down
+
+# Start Docker Compose services
+docker-up:
+	docker-compose up -d
+	docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+	@echo Services started.
+
+# Stop Docker Compose services
+docker-down:
+	docker-compose down
+	@echo Services stopped.
 
 # Freeze dependencies into requirements.txt (guarantees UTF-8 and LF)
 freeze:

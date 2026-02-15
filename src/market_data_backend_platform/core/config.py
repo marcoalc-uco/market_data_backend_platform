@@ -96,14 +96,24 @@ class Settings(BaseSettings):
         description="Enable automated data ingestion scheduler",
     )
 
-    @computed_field
-    def database_url(self) -> str:
-        """Compute full PostgreSQL connection URL from individual fields.
+    # Database URL (optional - if set, overrides computed URL)
+    database_url: str | None = Field(
+        default=None,
+        description="Full PostgreSQL connection URL (overrides individual fields if set)",
+    )
+
+    def get_database_url(self) -> str:
+        """Get the database URL.
+
+        Returns pre-configured DATABASE_URL if set (for Docker),
+        otherwise constructs from individual fields (for local dev).
 
         Returns:
-            str: PostgreSQL connection string in format:
-                 postgresql://user:password@host:port/database
+            str: PostgreSQL connection string
         """
+        if self.database_url:
+            return self.database_url
+
         return (
             f"postgresql://{self.db_user}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"

@@ -100,10 +100,10 @@ class TestDatabaseSettings:
         assert isinstance(settings.db_name, str)
 
     def test_settings_has_database_url_property(self) -> None:
-        """Test that settings has database_url computed property."""
+        """Test that settings has get_database_url method."""
         settings = Settings()
-        assert hasattr(settings, "database_url")
-        url = settings.database_url
+        assert hasattr(settings, "get_database_url")
+        url = settings.get_database_url()
         assert url.startswith("postgresql://")
         assert settings.db_host in url
         assert settings.db_name in url
