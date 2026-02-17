@@ -11,8 +11,13 @@ Example::
         market_price = transformer.transform(quote, instrument_id=1)
 """
 
+from decimal import ROUND_HALF_UP, Decimal
+
 from market_data_backend_platform.etl.clients.yahoo import YahooQuoteResponse
 from market_data_backend_platform.schemas.market_price import MarketPriceCreate
+
+# Price precision: 4 decimal places is sufficient for market prices
+_PRICE_PRECISION = Decimal("0.0001")
 
 
 class YahooTransformer:
@@ -46,13 +51,17 @@ class YahooTransformer:
         Returns:
             MarketPriceCreate schema ready for database insertion.
         """
+
+        def _round(value: Decimal) -> Decimal:
+            return value.quantize(_PRICE_PRECISION, rounding=ROUND_HALF_UP)
+
         return MarketPriceCreate(
             instrument_id=instrument_id,
             timestamp=quote.timestamp,
-            open=quote.open,
-            high=quote.high,
-            low=quote.low,
-            close=quote.close,
+            open=_round(quote.open),
+            high=_round(quote.high),
+            low=_round(quote.low),
+            close=_round(quote.close),
             volume=quote.volume,
         )
 

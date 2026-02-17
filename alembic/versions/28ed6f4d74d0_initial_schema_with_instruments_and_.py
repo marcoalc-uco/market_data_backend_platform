@@ -60,7 +60,7 @@ def upgrade() -> None:
         sa.Column("high", sa.Numeric(precision=18, scale=8), nullable=False),
         sa.Column("low", sa.Numeric(precision=18, scale=8), nullable=False),
         sa.Column("close", sa.Numeric(precision=18, scale=8), nullable=False),
-        sa.Column("volume", sa.Integer(), nullable=False),
+        sa.Column("volume", sa.BigInteger(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),

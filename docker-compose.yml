@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16
     container_name: market_data_postgres
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-market_data}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-market_data_pass}
@@ -23,6 +24,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: market_data_api
+    restart: always
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-market_data}:${POSTGRES_PASSWORD:-market_data_pass}@postgres:5432/${POSTGRES_DB:-market_data}
       API_PREFIX: /api/v1
@@ -49,6 +51,7 @@ services:
   grafana:
     image: grafana/grafana:11.0.0
     container_name: market_data_grafana
+    restart: always
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}

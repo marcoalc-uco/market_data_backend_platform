@@ -8,7 +8,14 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Index, Numeric, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    Index,
+    Numeric,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from market_data_backend_platform.models.base import Base, TimestampMixin
@@ -96,6 +103,7 @@ class MarketPrice(TimestampMixin, Base):
     )
 
     volume: Mapped[int] = mapped_column(
+        BigInteger,
         nullable=False,
     )
 

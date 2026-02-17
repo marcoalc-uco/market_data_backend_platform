@@ -7,7 +7,8 @@
       "Bash(docker-compose build:*)",
       "Bash(docker-compose up:*)",
       "Bash(docker ps:*)",
-      "Bash(python -c:*)"
+      "Bash(python -c:*)",
+      "Bash(docker-compose exec api python -c:*)"
     ]
   }
 }
