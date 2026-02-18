@@ -57,8 +57,8 @@ def run_ingestion_job() -> None:
         )
 
         result = service.ingest_all_active(
-            interval="1d",
-            period="1d",  # Only fetch today's data for efficiency
+            interval="5m",
+            period="1d",  # Intraday 5-min bars for today
         )
 
         logger.info(
