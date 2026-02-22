@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "id": 1,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -33,26 +33,28 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -72,7 +74,7 @@
               }
             ]
           },
-          "unit": "currencyUSD"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
@@ -84,12 +86,20 @@
       },
       "id": 1,
       "options": {
+        "candleStyle": "candles",
+        "colorStrategy": "open-close",
+        "colors": {
+          "down": "red",
+          "up": "green"
+        },
+        "includeAllFields": false,
         "legend": {
-          "calcs": ["last", "mean", "min", "max"],
+          "calcs": [],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
         },
+        "mode": "candles",
         "tooltip": {
           "mode": "multi",
           "sort": "none"
@@ -104,7 +114,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  mp.timestamp AS time,\n  mp.close AS value,\n  i.symbol AS metric\nFROM market_prices mp\nJOIN instruments i ON mp.instrument_id = i.id\nWHERE\n  i.symbol IN ($symbol)\n  AND mp.timestamp >= $__timeFrom()\n  AND mp.timestamp <= $__timeTo()\nORDER BY mp.timestamp ASC",
+          "rawSql": "SELECT\n  mp.timestamp AS time,\n  mp.open,\n  mp.high,\n  mp.low,\n  mp.close,\n  i.symbol AS metric\nFROM market_prices mp\nJOIN instruments i ON mp.instrument_id = i.id\nWHERE\n  i.symbol IN ($symbol)\n  AND mp.timestamp >= $__timeFrom()\n  AND mp.timestamp <= $__timeTo()\nORDER BY mp.timestamp ASC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -125,8 +135,8 @@
           }
         }
       ],
-      "title": "Close Price — ${symbol}",
-      "type": "timeseries"
+      "title": "Price Candlesticks — ${symbol}",
+      "type": "candlestick"
     },
     {
       "datasource": {
@@ -139,6 +149,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -148,10 +159,11 @@
             "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -197,6 +209,7 @@
           "showLegend": true
         },
         "tooltip": {
+          "maxHeight": 600,
           "mode": "multi",
           "sort": "none"
         }
@@ -271,7 +284,7 @@
             "properties": [
               {
                 "id": "unit",
-                "value": "currencyUSD"
+                "value": "currencyEUR"
               },
               {
                 "id": "custom.cellOptions",
@@ -353,17 +366,15 @@
       "type": "table"
     }
   ],
-  "refresh": "30s",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": ["market-data", "financial"],
   "templating": {
     "list": [
       {
         "current": {
           "selected": false,
-          "text": "stock",
-          "value": "stock"
+          "text": "crypto",
+          "value": "crypto"
         },
         "datasource": {
           "type": "postgres",
@@ -384,7 +395,12 @@
         "type": "query"
       },
       {
-        "current": {},
+        "allValue": "",
+        "current": {
+          "selected": false,
+          "text": ["BTC-EUR"],
+          "value": ["BTC-EUR"]
+        },
         "datasource": {
           "type": "postgres",
           "uid": "PostgreSQL"
@@ -392,7 +408,6 @@
         "definition": "SELECT symbol FROM instruments WHERE instrument_type = '${asset_type}' ORDER BY symbol",
         "hide": 0,
         "includeAll": true,
-        "allValue": "",
         "label": "Symbol",
         "multi": true,
         "name": "symbol",
@@ -407,13 +422,14 @@
     ]
   },
   "time": {
-    "from": "now-30d",
-    "to": "now"
+    "from": "2026-02-20T16:50:37.709Z",
+    "to": "2026-02-20T20:50:37.709Z"
   },
+  "timeRangeUpdatedDuringEditOrView": false,
   "timepicker": {},
   "timezone": "Europe/Madrid",
   "title": "Market Data - Multi-Instrument by Asset Type",
   "uid": "market_data_dashboard",
-  "version": 2,
+  "version": 6,
   "weekStart": ""
 }
