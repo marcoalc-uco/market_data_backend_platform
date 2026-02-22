@@ -48,6 +48,18 @@ Default credentials for quick start:
 
 - **PostgreSQL**: `market_data` / `market_data_pass`
 - **Grafana**: `admin` / `admin`
+- **FastAPI Admin**: `admin@market.com` / `yourpassword` (used to get JWT tokens)
+
+> **Important**: The API Admin user requires a bcrypt hashed password in the `.env` file. You must generate it yourself.
+>
+> To generate the hash for your own password, run this command in your terminal:
+>
+> ```bash
+> python -c "import bcrypt; print(bcrypt.hashpw(b'my_secure_password', bcrypt.gensalt()).decode())"
+> ```
+>
+> Then, copy the output and paste it into `ADMIN_PASSWORD_HASH` in your `.env` file. **Make sure to escape it with `$$` if using Docker Compose**, like this:
+> `ADMIN_PASSWORD_HASH=$$2b$$12$$...`
 
 > **Note**: For production, change all default passwords!
 

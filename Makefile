@@ -50,7 +50,7 @@ test-integration:
 
 # Start Docker Compose services
 docker-up:
-	docker-compose up -d
+	docker-compose up -d --build
 	docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 	@echo Services started.
 
