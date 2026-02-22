@@ -65,11 +65,11 @@ def fixture_client(session: Session):
 
 
 class TestListInstruments:
-    """Tests for GET /instruments endpoint."""
+    """Tests for GET /api/v1/instruments endpoint."""
 
     def test_list_instruments_empty(self, client: TestClient):
         """Should return empty list when no instruments exist."""
-        response = client.get("/instruments")
+        response = client.get("/api/v1/instruments")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == []
@@ -97,7 +97,7 @@ class TestListInstruments:
         session.commit()
 
         # Act
-        response = client.get("/instruments")
+        response = client.get("/api/v1/instruments")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -109,7 +109,7 @@ class TestListInstruments:
 
 
 class TestCreateInstrument:
-    """Tests for POST /instruments endpoint."""
+    """Tests for POST /api/v1/instruments endpoint."""
 
     def test_create_instrument_success(self, client: TestClient):
         """Should create a new instrument."""
@@ -120,7 +120,7 @@ class TestCreateInstrument:
             "exchange": "NASDAQ",
         }
 
-        response = client.post("/instruments", json=payload)
+        response = client.post("/api/v1/instruments", json=payload)
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
@@ -153,14 +153,14 @@ class TestCreateInstrument:
             "instrument_type": "stock",
             "exchange": "NYSE",
         }
-        response = client.post("/instruments", json=payload)
+        response = client.post("/api/v1/instruments", json=payload)
 
         # Assert
         assert response.status_code == status.HTTP_409_CONFLICT
 
 
 class TestGetInstrument:
-    """Tests for GET /instruments/{id} endpoint."""
+    """Tests for GET /api/v1/instruments/{id} endpoint."""
 
     def test_get_instrument_success(
         self,
@@ -180,7 +180,7 @@ class TestGetInstrument:
         session.refresh(instrument)
 
         # Act
-        response = client.get(f"/instruments/{instrument.id}")
+        response = client.get(f"/api/v1/instruments/{instrument.id}")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -190,13 +190,13 @@ class TestGetInstrument:
 
     def test_get_instrument_not_found(self, client: TestClient):
         """Should return 404 when instrument not found."""
-        response = client.get("/instruments/9999")
+        response = client.get("/api/v1/instruments/9999")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 class TestUpdateInstrument:
-    """Tests for PATCH /instruments/{id} endpoint."""
+    """Tests for PATCH /api/v1/instruments/{id} endpoint."""
 
     def test_update_instrument_success(
         self,
@@ -217,7 +217,7 @@ class TestUpdateInstrument:
 
         # Act
         payload = {"name": "Microsoft Corporation", "is_active": False}
-        response = client.patch(f"/instruments/{instrument.id}", json=payload)
+        response = client.patch(f"/api/v1/instruments/{instrument.id}", json=payload)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -228,13 +228,13 @@ class TestUpdateInstrument:
 
     def test_update_instrument_not_found(self, client: TestClient):
         """Should return 404 when instrument not found."""
-        response = client.patch("/instruments/9999", json={"name": "Test"})
+        response = client.patch("/api/v1/instruments/9999", json={"name": "Test"})
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 class TestDeleteInstrument:
-    """Tests for DELETE /instruments/{id} endpoint."""
+    """Tests for DELETE /api/v1/instruments/{id} endpoint."""
 
     def test_delete_instrument_success(
         self,
@@ -254,24 +254,24 @@ class TestDeleteInstrument:
         session.refresh(instrument)
 
         # Act
-        response = client.delete(f"/instruments/{instrument.id}")
+        response = client.delete(f"/api/v1/instruments/{instrument.id}")
 
         # Assert
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify deletion
-        get_response = client.get(f"/instruments/{instrument.id}")
+        get_response = client.get(f"/api/v1/instruments/{instrument.id}")
         assert get_response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_instrument_not_found(self, client: TestClient):
         """Should return 404 when instrument not found."""
-        response = client.delete("/instruments/9999")
+        response = client.delete("/api/v1/instruments/9999")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 class TestGetInstrumentPrices:
-    """Tests for GET /instruments/{id}/prices endpoint."""
+    """Tests for GET /api/v1/instruments/{id}/prices endpoint."""
 
     def test_get_prices_empty(
         self,
@@ -291,7 +291,7 @@ class TestGetInstrumentPrices:
         session.refresh(instrument)
 
         # Act
-        response = client.get(f"/instruments/{instrument.id}/prices")
+        response = client.get(f"/api/v1/instruments/{instrument.id}/prices")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -339,7 +339,7 @@ class TestGetInstrumentPrices:
         session.commit()
 
         # Act
-        response = client.get(f"/instruments/{instrument.id}/prices")
+        response = client.get(f"/api/v1/instruments/{instrument.id}/prices")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -381,7 +381,7 @@ class TestGetInstrumentPrices:
         session.commit()
 
         # Act
-        response = client.get(f"/instruments/{instrument.id}/prices?limit=3")
+        response = client.get(f"/api/v1/instruments/{instrument.id}/prices?limit=3")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -390,6 +390,6 @@ class TestGetInstrumentPrices:
 
     def test_get_prices_instrument_not_found(self, client: TestClient):
         """Should return 404 when instrument not found."""
-        response = client.get("/instruments/9999/prices")
+        response = client.get("/api/v1/instruments/9999/prices")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND

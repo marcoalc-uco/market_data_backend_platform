@@ -96,10 +96,13 @@ class YahooFinanceClient:
             "interval": interval,
             "range": period,
         }
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
 
         try:
             with httpx.Client(timeout=self.timeout) as client:
-                response = client.get(url, params=params)
+                response = client.get(url, params=params, headers=headers)
                 response.raise_for_status()
                 return response.json()  # type: ignore[no-any-return]
         except httpx.HTTPError as e:
@@ -183,16 +186,35 @@ class YahooFinanceClient:
 
             responses = []
             for i, ts in enumerate(timestamps):
+                open_val = Decimal(str(quotes.get("open", [])[i] or 0))
+                high_val = Decimal(str(quotes.get("high", [])[i] or 0))
+                low_val = Decimal(str(quotes.get("low", [])[i] or 0))
+                close_val = Decimal(str(quotes.get("close", [])[i] or 0))
+                vol_val = int(quotes.get("volume", [])[i] or 0)
+
+                # Skip empty or 0-price candles
+                if open_val == 0 and close_val == 0:
+                    continue
+
+                # Skip completely flat candles with 0 volume (often live incomplete ticks or illiquid periods)
+                if (
+                    vol_val == 0
+                    and open_val == close_val
+                    and high_val == low_val
+                    and open_val == high_val
+                ):
+                    continue
+
                 timestamp = datetime.fromtimestamp(ts, tz=timezone.utc)
 
                 response = YahooQuoteResponse(
                     symbol=meta.get("symbol", symbol),
                     timestamp=timestamp,
-                    open=Decimal(str(quotes.get("open", [])[i] or 0)),
-                    high=Decimal(str(quotes.get("high", [])[i] or 0)),
-                    low=Decimal(str(quotes.get("low", [])[i] or 0)),
-                    close=Decimal(str(quotes.get("close", [])[i] or 0)),
-                    volume=int(quotes.get("volume", [])[i] or 0),
+                    open=open_val,
+                    high=high_val,
+                    low=low_val,
+                    close=close_val,
+                    volume=vol_val,
                     current_price=Decimal(str(meta.get("regularMarketPrice", 0))),
                 )
                 responses.append(response)

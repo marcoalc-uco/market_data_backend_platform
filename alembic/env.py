@@ -35,7 +35,7 @@ from market_data_backend_platform.models import (  # noqa: F401
 config = context.config
 
 # Override sqlalchemy.url with our settings
-config.set_main_option("sqlalchemy.url", str(settings.database_url))
+config.set_main_option("sqlalchemy.url", settings.get_database_url())
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:

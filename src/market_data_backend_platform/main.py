@@ -82,10 +82,18 @@ app.add_middleware(
 # Register routers
 # Health endpoint at /health
 app.include_router(health.router)
-# Instruments CRUD at /instruments
-app.include_router(instruments.router, prefix="/instruments", tags=["instruments"])
-# Prices query at /prices
-app.include_router(prices.router, prefix="/prices", tags=["prices"])
+# Instruments CRUD at /api/v1/instruments
+app.include_router(
+    instruments.router,
+    prefix=f"{settings.api_prefix}/instruments",
+    tags=["instruments"],
+)
+# Prices query at /api/v1/prices
+app.include_router(
+    prices.router,
+    prefix=f"{settings.api_prefix}/prices",
+    tags=["prices"],
+)
 
 
 # Global exception handler for MarketDataError

@@ -40,6 +40,9 @@ COPY src/ /app/src/
 COPY alembic/ /app/alembic/
 COPY alembic.ini /app/alembic.ini
 
+# Set PYTHONPATH so the application module can be imported
+ENV PYTHONPATH="/app/src:$PYTHONPATH"
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app

@@ -20,10 +20,9 @@ from market_data_backend_platform.core import settings
 if TYPE_CHECKING:
     from sqlalchemy.engine import Engine
 
-# Create SQLAlchemy engine with connection pool configuration
-# Using sync engine for simplicity; can be upgraded to async if needed
+# Database engine with connection pooling
 engine: "Engine" = create_engine(
-    str(settings.database_url),  # Explicit str for mypy compatibility
+    settings.get_database_url(),  # Use method to get URL (supports Docker override)
     pool_size=settings.db_pool_size,
     max_overflow=settings.db_max_overflow,
     pool_pre_ping=True,  # Verify connections before using
