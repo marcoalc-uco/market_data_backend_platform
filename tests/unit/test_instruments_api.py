@@ -51,6 +51,7 @@ def fixture_session(engine):
 def fixture_client(session: Session):
     """Create test client with overridden dependencies."""
     from market_data_backend_platform.api.dependencies import get_db_session
+    from market_data_backend_platform.auth.dependencies import get_current_user
 
     def override_get_db_session():
         try:
@@ -59,6 +60,7 @@ def fixture_client(session: Session):
             pass
 
     app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_current_user] = lambda: "test@market.com"
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

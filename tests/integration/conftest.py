@@ -37,9 +37,10 @@ def docker_compose_up() -> Generator[None, None, None]:
         capture_output=True,
     )
 
-    # Start TEST services with fresh volumes
+    # Start TEST services with fresh volumes — always rebuild the API image
+    # so that code changes are picked up without manual docker rmi.
     subprocess.run(
-        ["docker-compose", "-f", "docker-compose.test.yml", "up", "-d"],
+        ["docker-compose", "-f", "docker-compose.test.yml", "up", "-d", "--build"],
         check=True,
         capture_output=True,
     )
@@ -81,13 +82,18 @@ def docker_compose_up() -> Generator[None, None, None]:
 def api_client(docker_compose_up: None) -> Generator[httpx.Client, None, None]:
     """HTTP client for the containerized TEST API.
 
+    Waits for the API to be ready, obtains a JWT token via the login
+    endpoint, and yields a client with the Authorization header pre-set
+    so that all requests to protected routes are authenticated.
+
     Args:
-        docker_compose_up: Ensures Docker TEST services are running
+        docker_compose_up: Ensures Docker TEST services are running.
 
     Yields:
         Configured httpx.Client pointing to the TEST API (port 8001)
+        with a Bearer token in the default headers.
     """
-    base_url = "http://localhost:8001"  # TEST API on different port
+    base_url = "http://localhost:8001"
 
     # Wait for API to be ready
     max_retries = 30
@@ -104,7 +110,19 @@ def api_client(docker_compose_up: None) -> Generator[httpx.Client, None, None]:
         if i == max_retries - 1:
             raise RuntimeError("API failed to become ready")
 
-    with httpx.Client(base_url=base_url, timeout=10.0) as client:
+    # Obtain a JWT token once for the entire test session
+    token_response = httpx.post(
+        f"{base_url}/api/v1/auth/token",
+        data={"username": "admin@market.com", "password": "adminpassword"},
+    )
+    token_response.raise_for_status()
+    access_token = token_response.json()["access_token"]
+
+    with httpx.Client(
+        base_url=base_url,
+        timeout=10.0,
+        headers={"Authorization": f"Bearer {access_token}"},
+    ) as client:
         yield client
 
 
@@ -128,7 +146,7 @@ def db_connection(
         try:
             conn = psycopg2.connect(
                 host="localhost",
-                port=5433,  # TEST database on different port
+                port=5433,
                 user="market_data",
                 password="market_data_pass",
                 database="market_data",

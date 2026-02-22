@@ -2,7 +2,6 @@
 
 > **Purpose:** Technical architecture and component design
 > **Location:** `/docs/architecture.md`
-> **Related:** See `/AGENT.md` for coding standards, `/docs/PRD.md` for requirements
 
 ---
 
@@ -92,6 +91,7 @@ market_data_backend_platform/
 │       │
 │       ├── api/                       # HTTP Layer
 │       │   ├── routes/
+│       │   │   ├── auth.py            # Authentication endpoints (JWT login)
 │       │   │   ├── health.py          # Health check endpoint
 │       │   │   ├── instruments.py     # Instrument CRUD
 │       │   │   └── prices.py          # Price queries
@@ -129,6 +129,11 @@ market_data_backend_platform/
 │       │
 │       ├── scheduler/                 # Automated Jobs
 │       │   └── __init__.py            # APScheduler configuration
+│       │
+│       ├── auth/                      # Authentication & Security
+│       │   ├── password.py            # bcrypt hashing & verification
+│       │   ├── token.py               # JWT creation & decoding
+│       │   └── dependencies.py        # get_current_user dependency
 │       │
 │       └── db/                        # Database Layer
 │           └── session.py             # Session factory
@@ -322,16 +327,17 @@ alembic downgrade -1
 
 **Endpoints:**
 
-| Method | Endpoint                                | Purpose                   |
-| ------ | --------------------------------------- | ------------------------- |
-| GET    | `/health`                               | Health check              |
-| GET    | `/api/v1/instruments`                   | List instruments          |
-| GET    | `/api/v1/instruments/{id}`              | Get instrument by ID      |
-| POST   | `/api/v1/instruments`                   | Create instrument         |
-| PUT    | `/api/v1/instruments/{id}`              | Update instrument         |
-| DELETE | `/api/v1/instruments/{id}`              | Delete instrument         |
-| GET    | `/api/v1/prices/{instrument_id}`        | Get prices for instrument |
-| GET    | `/api/v1/prices/{instrument_id}/latest` | Get latest price          |
+| Method | Endpoint                                | Purpose                      |
+| ------ | --------------------------------------- | ---------------------------- |
+| GET    | `/health`                               | Health check                 |
+| POST   | `/api/v1/auth/token`                    | Login — get JWT access token |
+| GET    | `/api/v1/instruments`                   | List instruments             |
+| GET    | `/api/v1/instruments/{id}`              | Get instrument by ID         |
+| POST   | `/api/v1/instruments`                   | Create instrument            |
+| PUT    | `/api/v1/instruments/{id}`              | Update instrument            |
+| DELETE | `/api/v1/instruments/{id}`              | Delete instrument            |
+| GET    | `/api/v1/prices/{instrument_id}`        | Get prices for instrument    |
+| GET    | `/api/v1/prices/{instrument_id}/latest` | Get latest price             |
 
 **Features:**
 
@@ -635,8 +641,11 @@ All list endpoints support:
 - **ORM Parameterization:** SQLAlchemy escapes all inputs
 - **No raw SQL:** Except in reviewed migrations
 
-### API Security
+### API Security (JWT Authentication)
 
+- **Login endpoint:** `POST /api/v1/auth/token` — returns a signed JWT access token
+- **Password storage:** bcrypt hashing (never stored in plain text)
+- **Token validation:** HS256-signed JWT verified on every protected request via `get_current_user` dependency
 - Input validation via Pydantic
 - CORS configuration for production
 - Rate limiting (future enhancement)
@@ -668,7 +677,6 @@ All logs are JSON-formatted:
 
 ---
 
-**Version:** 2.0
+**Version:** 3.0
 **Location:** `/docs/architecture.md`
-**Related:** `/AGENT.md` (coding standards), `/docs/PRD.md` (requirements)
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-22

@@ -1,18 +1,23 @@
-# Market Data Backend Platform
+# 📈 Market Data Backend Platform
 
-FastAPI backend for financial market data ingestion and time-series visualization with Grafana.
+> A production-grade FastAPI backend for financial market data — built with clean architecture, TDD, and full Docker support.
+
+[![CI](https://github.com/marcoalc-uco/market_data_backend_platform/actions/workflows/ci.yml/badge.svg)](https://github.com/marcoalc-uco/market_data_backend_platform/actions/workflows/ci.yml)
 
 ---
 
-## Overview
+## What is this?
 
-The **Market Data Backend Platform** is an API-first backend system designed for financial time-series data. It provides:
+A backend platform that automatically ingests historical market data (stocks, indices, cryptocurrencies) from external APIs, stores it in PostgreSQL, and exposes it through a REST API — with Grafana dashboards for visualization out of the box.
 
-- **Data Ingestion**: ETL pipeline for market data from external APIs (Yahoo Finance, Alpha Vantage)
-- **REST API**: FastAPI-based endpoints for querying instruments and prices
-- **Visualization**: Grafana dashboards for real-time market data analysis
-- **Persistence**: PostgreSQL database with optimized time-series storage
-- **Reproducibility**: Docker Compose for local development
+**Key highlights:**
+
+- 🔐 **JWT Authentication** — Secure API access with bcrypt-hashed credentials
+- 📈 **ETL Pipeline** — Automated market data ingestion via APScheduler + Yahoo Finance
+- 🗄️ **PostgreSQL** — Time-series optimized schema with Alembic migrations
+- 📊 **Grafana** — Pre-configured dashboards, ready to explore
+- 🐳 **One-command Docker setup** — API + DB + Grafana with `docker-compose up`
+- ✅ **Full test suite** — Unit and integration tests with ≥85% coverage
 
 ---
 
@@ -20,243 +25,139 @@ The **Market Data Backend Platform** is an API-first backend system designed for
 
 ### Prerequisites
 
-- **Docker**: Version 20.10+
-- **Docker Compose**: Version 2.0+
-- **Git**: For cloning the repository
+- [Docker](https://docs.docker.com/get-docker/) 20.10+
+- [Docker Compose](https://docs.docker.com/compose/) 2.0+
 
-### 1. Clone the Repository
+### 1. Clone and configure
 
 ```bash
-git clone https://github.com/yourusername/market_data_backend_platform.git
+git clone https://github.com/marcoalc-uco/market_data_backend_platform.git
 cd market_data_backend_platform
-```
-
-### 2. Configure Environment
-
-Copy the environment template and customize if needed:
-
-```bash
 cp .env.example .env
 ```
 
-The `.env` file works for both:
+### 2. Generate your admin password hash
 
-- **Local development**: Python running on your machine (connects to `localhost:5432`)
-- **Docker Compose**: All services running in containers (internal networking)
+The API uses bcrypt-hashed passwords. Generate one for your admin user:
 
-Default credentials for quick start:
+```bash
+python -c "import bcrypt; print(bcrypt.hashpw(b'your_password', bcrypt.gensalt()).decode())"
+```
 
-- **PostgreSQL**: `market_data` / `market_data_pass`
-- **Grafana**: `admin` / `admin`
+Paste the output into your `.env` file, escaping `$` with `$$` for Docker Compose:
 
-> **Note**: For production, change all default passwords!
+```env
+ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_PASSWORD_HASH=$$2b$$12$$...your-hash-here...
 
-### 3. Start Services
+# Also set a proper secret key:
+SECRET_KEY=your-openssl-rand-hex-32-value
+```
 
-Build and start all services (PostgreSQL, API, Grafana):
+> **Tip:** Generate a strong `SECRET_KEY` with: `openssl rand -hex 32`
+
+### 3. Start everything
 
 ```bash
 docker-compose up -d
 ```
 
-This will:
+Services will be available at:
 
-- Build the FastAPI application Docker image
-- Start PostgreSQL database
-- Run database migrations (Alembic)
-- Start the FastAPI server
-- Start Grafana with pre-configured datasource and dashboards
-
-### 4. Verify Services
-
-Check that all services are running:
-
-```bash
-docker-compose ps
-```
-
-Expected output:
-
-```
-NAME                     STATUS              PORTS
-market_data_postgres     Up (healthy)        0.0.0.0:5432->5432/tcp
-market_data_api          Up (healthy)        0.0.0.0:8000->8000/tcp
-market_data_grafana      Up                  0.0.0.0:3000->3000/tcp
-```
-
-### 5. Access Services
-
-- **API Documentation**: http://localhost:8000/docs
-- **API Health Check**: http://localhost:8000/health
-- **Grafana Dashboard**: http://localhost:3000 (admin/admin)
-- **PostgreSQL**: localhost:5432 (market_data/market_data_pass)
+| Service        | URL                          | Credentials                    |
+| -------------- | ---------------------------- | ------------------------------ |
+| **API Docs**   | http://localhost:8000/docs   | —                              |
+| **API Health** | http://localhost:8000/health | —                              |
+| **Grafana**    | http://localhost:3000        | admin / admin                  |
+| **PostgreSQL** | localhost:5432               | market_data / market_data_pass |
 
 ---
 
-## Usage
+## Using the API
 
-### Populate Data
+### Interactive API Docs (recommended)
 
-Run the ETL ingestion to populate the database with market data:
+The easiest way to explore and test the API is via the built-in **Swagger UI** at http://localhost:8000/docs.
 
-```bash
-# Enter the API container
-docker-compose exec api bash
+To authenticate inside Swagger:
 
-# Run ingestion (example - adjust based on your ETL implementation)
-python -m market_data_backend_platform.etl.services.ingestion
-```
+1. Click **POST /api/v1/auth/token** → **Try it out**
+2. Fill in `username` (your `ADMIN_EMAIL`) and `password`, then **Execute**
+3. Copy the `access_token` from the response
+4. Click the **🔒 Authorize** button at the top of the page
+5. Paste the token as `Bearer <token>` and click **Authorize**
 
-### Query API
+All protected endpoints in Swagger will now use your token automatically.
 
-List all instruments:
+> **Tip:** There's also a ReDoc UI at http://localhost:8000/redoc for a cleaner read-only reference.
 
-```bash
-curl http://localhost:8000/api/v1/instruments
-```
-
-Get prices for an instrument:
+### Via cURL (advanced)
 
 ```bash
-curl "http://localhost:8000/api/v1/prices/1?start_date=2024-01-01&end_date=2024-12-31"
+# Step 1: Authenticate
+curl -X POST http://localhost:8000/api/v1/auth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin@yourdomain.com&password=your_password"
+
+# Step 2: Use the token
+curl http://localhost:8000/api/v1/instruments \
+  -H "Authorization: Bearer <your_token>"
+
+# Get OHLCV prices for an instrument
+curl "http://localhost:8000/api/v1/prices/1?start_date=2024-01-01&end_date=2024-12-31" \
+  -H "Authorization: Bearer <token>"
 ```
 
-### View Dashboards
+### Grafana Dashboards
 
-1. Navigate to http://localhost:3000
-2. Login with `admin/admin`
-3. Go to **Dashboards** → **Market Data - Multi-Instrument by Asset Type**
-4. Select asset type from dropdown (STOCK, INDEX, CRYPTO)
-5. Adjust time range as needed
+1. Open http://localhost:3000 → login with `admin/admin`
+2. Go to **Dashboards → Market Data - Multi-Instrument by Asset Type**
+3. Pick an asset type (STOCK, INDEX, CRYPTO) from the dropdown
+4. Adjust the time range as needed
 
 ---
 
 ## Development
 
-### Local Development (Without Docker)
+### Local setup (without Docker)
 
-#### Prerequisites
-
-- Python 3.14+
-- PostgreSQL 16+
-
-#### Setup
-
-1. Create virtual environment:
+**Requirements:** Python 3.14+, PostgreSQL 16+
 
 ```bash
+# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
+.venv\Scripts\activate       # Windows
+# source .venv/bin/activate  # macOS/Linux
 
-2. Install dependencies:
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-3. Configure environment:
-
-```bash
+# Configure environment
 cp .env.example .env
-# Edit .env with your local PostgreSQL credentials
-```
+# Edit .env with your local DB credentials
 
-4. Run migrations:
-
-```bash
+# Run migrations
 alembic upgrade head
+
+# Start dev server (with hot reload)
+make dev
 ```
 
-5. Start development server:
+### Running tests
 
 ```bash
-uvicorn market_data_backend_platform.main:app --reload
+make test          # Unit tests only (fast)
+make test-all      # All tests including integration
+make test-cov      # Coverage report (opens browser)
 ```
 
-### Running Tests
+### Code quality
+
+All quality checks run automatically via pre-commit hooks on every commit:
 
 ```bash
-# Run all tests
-make test
-
-# Run with coverage
-make test-cov
-
-# Run specific test file
-pytest tests/unit/test_instruments.py
-```
-
-### Code Quality
-
-```bash
-# Lint code
-make lint
-
-# Format code
-make format
-
-# Type check
-make type-check
-
-# Run all quality checks
-make quality
-```
-
----
-
-## Docker Commands
-
-### View Logs
-
-```bash
-# All services
-docker-compose logs -f
-
-# Specific service
-docker-compose logs -f api
-docker-compose logs -f postgres
-docker-compose logs -f grafana
-```
-
-### Restart Services
-
-```bash
-# Restart all
-docker-compose restart
-
-# Restart specific service
-docker-compose restart api
-```
-
-### Stop Services
-
-```bash
-# Stop all services
-docker-compose down
-
-# Stop and remove volumes (WARNING: deletes data)
-docker-compose down -v
-```
-
-### Database Access
-
-```bash
-# Connect to PostgreSQL
-docker-compose exec postgres psql -U market_data -d market_data
-
-# Run SQL query
-docker-compose exec postgres psql -U market_data -d market_data -c "SELECT * FROM instruments;"
-```
-
-### Rebuild After Code Changes
-
-```bash
-# Rebuild API service
-docker-compose build api
-
-# Restart with new image
-docker-compose up -d api
+pre-commit install   # One-time setup
+git commit ...       # hooks run: black, isort, pylint, mypy, pytest
 ```
 
 ---
@@ -265,125 +166,115 @@ docker-compose up -d api
 
 ```
 market_data_backend_platform/
-├── src/market_data_backend_platform/  # Application code
-│   ├── api/                           # FastAPI routes
-│   ├── core/                          # Configuration, logging
-│   ├── models/                        # SQLAlchemy models
-│   ├── schemas/                       # Pydantic schemas
-│   ├── repositories/                  # Data access layer
-│   ├── services/                      # Business logic
-│   ├── etl/                           # Data ingestion
-│   └── db/                            # Database session
-├── tests/                             # Unit and integration tests
-├── alembic/                           # Database migrations
-├── docker/                            # Docker configuration
-│   ├── Dockerfile                     # API container image
-│   └── grafana/                       # Grafana provisioning
-├── docs/                              # Documentation
-├── docker-compose.yml                 # Multi-service orchestration
-└── pyproject.toml                     # Project configuration
+├── src/market_data_backend_platform/
+│   ├── api/routes/          # FastAPI endpoints (auth, instruments, prices, health)
+│   ├── auth/                # JWT tokens, bcrypt hashing, auth dependencies
+│   ├── core/                # Config (pydantic-settings), logging, exceptions
+│   ├── models/              # SQLAlchemy ORM models
+│   ├── schemas/             # Pydantic schemas (request/response DTOs)
+│   ├── repositories/        # Data access layer (Repository pattern)
+│   ├── services/            # Business logic
+│   ├── etl/                 # Data ingestion (clients, transformers, scheduler)
+│   ├── db/                  # Database session factory
+│   └── main.py              # Application entry point
+├── tests/
+│   ├── unit/                # Fast tests, no external dependencies
+│   └── integration/         # Tests with real PostgreSQL (via Docker)
+├── alembic/                 # Database migrations
+├── docker/                  # Dockerfile + Grafana provisioning
+├── docs/                    # Architecture and roadmap
+├── .github/workflows/       # GitHub Actions CI pipeline
+├── docker-compose.yml       # Full stack: API + PostgreSQL + Grafana
+└── Makefile                 # Common dev commands
 ```
+
+---
+
+## Docker Commands
+
+```bash
+make docker-up       # Build and start all services
+make docker-down     # Stop all services
+make docker-down -v  # Stop and delete volumes (fresh start)
+
+# View logs
+docker-compose logs -f api
+
+# Access PostgreSQL
+docker-compose exec postgres psql -U market_data -d market_data
+
+# Rebuild after code changes
+docker-compose build api && docker-compose up -d api
+```
+
+---
+
+## Database Migrations
+
+```bash
+make db-migrate msg="describe your change"   # Generate new migration
+make db-upgrade                              # Apply pending migrations
+make db-downgrade                            # Revert last migration
+make db-status                               # Show current version
+```
+
+---
+
+## Tech Stack
+
+| Layer         | Technology     | Purpose                       |
+| ------------- | -------------- | ----------------------------- |
+| API           | FastAPI 0.115+ | Async web framework           |
+| Auth          | PyJWT + bcrypt | JWT tokens & password hashing |
+| Validation    | Pydantic 2.x   | Type-safe schemas & settings  |
+| ORM           | SQLAlchemy 2.x | Database abstraction          |
+| Migrations    | Alembic        | Schema versioning             |
+| Database      | PostgreSQL 16  | Time-series data storage      |
+| Scheduler     | APScheduler    | Automated data ingestion      |
+| Visualization | Grafana 11+    | Dashboards                    |
+| Logging       | structlog      | Structured JSON logs          |
+| Testing       | pytest + httpx | Unit and integration tests    |
+| Containers    | Docker Compose | Local orchestration           |
+| CI            | GitHub Actions | Automated quality pipeline    |
 
 ---
 
 ## Documentation
 
-- **[Architecture](docs/architecture.md)**: System design and component overview
-- **[Roadmap](docs/roadmap.md)**: Development phases and progress
-- **[Grafana Guide](docs/GRAFANA.md)**: Dashboard usage and customization
-- **[PRD](docs/PRD.md)**: Product requirements document
-- **[DEV_PLAN](docs/DEV_PLAN.md)**: Development execution plan
-- **[QA_PROTOCOL](docs/QA_PROTOCOL.md)**: Quality assurance checklist
+| Document                             | Description                                            |
+| ------------------------------------ | ------------------------------------------------------ |
+| [Architecture](docs/architecture.md) | Component design, data flows, DB schema, API endpoints |
+| [Roadmap](docs/roadmap.md)           | Development phases and progress                        |
+| [Grafana Guide](docs/GRAFANA.md)     | Dashboard setup and customization                      |
 
 ---
 
 ## Troubleshooting
 
-### Port Already in Use
+**Port already in use (5432, 8000, 3000)**
+Stop conflicting services, or change the port mapping in `docker-compose.yml`.
 
-If ports 5432, 8000, or 3000 are already in use:
-
-1. Stop conflicting services
-2. Or modify ports in `docker-compose.yml`:
-
-```yaml
-services:
-  postgres:
-    ports:
-      - "5433:5432" # Change host port
-```
-
-### Database Connection Failed
+**`market_data_api` not starting**
 
 ```bash
-# Check PostgreSQL is running
-docker-compose ps postgres
-
-# View PostgreSQL logs
-docker-compose logs postgres
-
-# Restart PostgreSQL
-docker-compose restart postgres
+docker-compose logs api   # Check for migration errors or missing env vars
 ```
 
-### API Not Starting
+**Grafana dashboard is empty**
+The scheduler runs ingestion automatically. For an immediate run:
 
 ```bash
-# Check API logs
-docker-compose logs api
-
-# Common issues:
-# 1. Database not ready - wait for postgres health check
-# 2. Migration failed - check alembic logs
-# 3. Port conflict - change port in docker-compose.yml
+docker-compose exec api python -m market_data_backend_platform.etl.services.ingestion
 ```
 
-### Grafana Dashboard Empty
-
-1. Verify data exists in database:
-
-   ```bash
-   docker-compose exec postgres psql -U market_data -d market_data -c "SELECT COUNT(*) FROM market_prices;"
-   ```
-
-2. Run ETL ingestion to populate data
-
-3. Check Grafana datasource connection:
-   - Go to Settings → Data Sources → PostgreSQL
-   - Click "Save & Test"
-
----
-
-## Technology Stack
-
-- **API Framework**: FastAPI 0.115+
-- **Database**: PostgreSQL 16
-- **ORM**: SQLAlchemy 2.x
-- **Migrations**: Alembic 1.x
-- **Validation**: Pydantic 2.x
-- **Testing**: pytest 8.x
-- **Visualization**: Grafana 11+
-- **Containerization**: Docker & Docker Compose
-
----
-
-## Contributing
-
-See [AGENT.md](AGENT.md) for coding standards and development guidelines.
+Then check Grafana datasource: **Settings → Data Sources → Test**.
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
-## Contact
-
-For questions or issues, please open a GitHub issue.
-
----
-
-**Version**: 1.0
-**Last Updated**: 2026-02-13
+_Last updated: 2026-02-22_

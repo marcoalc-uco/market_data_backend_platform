@@ -82,7 +82,7 @@ Tareas:
 
 ---
 
-## Fase 2 — Backend base (FastAPI)
+## Fase 2 — Backend base (FastAPI) e Infraestructura de Testing
 
 **Objetivo:** Construir el núcleo del servicio con TDD.
 
@@ -109,7 +109,7 @@ Tareas:
 
 ---
 
-## Fase 3 — Modelado y persistencia
+## Fase 3 — Modelado, Persistencia y Autenticación (JWT/Sesiones)
 
 **Objetivo:** Definir el dominio de datos con TDD.
 
@@ -119,8 +119,10 @@ Tareas:
 - Modelos SQLAlchemy:
   - `Instrument`
   - `MarketPrice`
+  - `User` (Gestión de usuarios administradores)
 - Schemas Pydantic (separados de modelos).
 - Implementación de Repository pattern.
+- Sistema de Autenticación con JWT (Token y Login).
 - Configuración de Alembic.
 - Migraciones iniciales.
 
@@ -235,15 +237,15 @@ Tareas:
 
 ---
 
-## Fase 8 — CI/CD y documentación final
+## Fase 8 — CI/CD y documentación final (GitHub Actions)
 
 **Objetivo:** Proyecto publicable y defendible.
 
 Tareas:
 
 - GitHub Actions:
-  - Lint + Type check.
-  - Tests + Coverage.
+  - Lint + Type check (`black`, `isort`, `pylint`, `mypy`).
+  - Tests unitarios + Coverage (`pytest --cov-fail-under=85`).
   - Build Docker image.
 - README principal profesional.
 - Documentación en `docs/`.
@@ -262,10 +264,10 @@ Tareas:
 
 - [x] Fase 0 — Diseño y arquitectura
 - [x] Fase 1 — Setup del proyecto
-- [x] Fase 2 — Backend base (FastAPI)
-- [x] Fase 3 — Modelado y persistencia
+- [x] Fase 2 — Backend base (FastAPI) e Infraestructura de Testing
+- [x] Fase 3 — Modelado, Persistencia y Autenticación (JWT/Sesiones)
 - [x] Fase 4 — Ingestión de datos (ETL)
 - [x] Fase 5 — API REST de consulta
 - [x] Fase 6 — Visualización con Grafana
-- [ ] Fase 7 — Dockerización y despliegue local
-- [ ] Fase 8 — CI/CD y documentación final
+- [x] Fase 7 — Dockerización y despliegue local
+- [x] Fase 8 — CI/CD y documentación final (GitHub Actions)
