@@ -50,4 +50,4 @@ secrets/
 
 # Custom directories and files
 *.SQL
-.claude/
+.agent/

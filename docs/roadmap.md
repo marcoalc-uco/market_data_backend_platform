@@ -237,15 +237,15 @@ Tareas:
 
 ---
 
-## Fase 8 — CI/CD y documentación final
+## Fase 8 — CI/CD y documentación final (GitHub Actions)
 
 **Objetivo:** Proyecto publicable y defendible.
 
 Tareas:
 
 - GitHub Actions:
-  - Lint + Type check.
-  - Tests + Coverage.
+  - Lint + Type check (`black`, `isort`, `pylint`, `mypy`).
+  - Tests unitarios + Coverage (`pytest --cov-fail-under=85`).
   - Build Docker image.
 - README principal profesional.
 - Documentación en `docs/`.
@@ -270,4 +270,4 @@ Tareas:
 - [x] Fase 5 — API REST de consulta
 - [x] Fase 6 — Visualización con Grafana
 - [x] Fase 7 — Dockerización y despliegue local
-- [ ] Fase 8 — CI/CD y documentación final
+- [x] Fase 8 — CI/CD y documentación final (GitHub Actions)

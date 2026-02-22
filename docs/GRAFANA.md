@@ -22,41 +22,44 @@ Once the Docker Compose environment is running:
 
 ### Main Dashboard: Market Data - Multi-Instrument by Asset Type
 
-The dashboard is designed to display multiple instruments grouped by asset type (STOCK, INDEX, CRYPTO, etc.).
+The dashboard displays OHLCV candlestick charts and volume bars for one or more instruments, filtered by asset type. It uses two linked dropdown variables:
 
-**Key Features:**
+| Variable        | Label      | Description                                                                                  |
+| --------------- | ---------- | -------------------------------------------------------------------------------------------- |
+| `${asset_type}` | Asset Type | Selects the instrument type (`crypto`, `index`, `stock`). Populated dynamically from the DB. |
+| `${symbol}`     | Symbol     | Multi-select of symbols belonging to the selected asset type.                                |
 
-- **Asset Type Selector**: Dropdown variable to filter by asset type
-- **Time Range Picker**: Adjust the time window for analysis
-- **Auto-Refresh**: Dashboard refreshes every 30 seconds
+**Dashboard features:**
+
+- **Candlestick chart** — OHLCV price evolution
+- **Volume bar chart** — Trading volume over time
+- **Latest prices table** — Most recent OHLCV snapshot per instrument
+- **Time range picker** — Adjust the analysis window
+- **Auto-cross-filter** — Selecting an asset type refreshes the symbol list automatically
 
 ---
 
 ## Dashboard Panels
 
-### 1. Price Evolution by Asset Type
+### 1. Price Candlesticks — `${symbol}`
 
-**Type**: Time Series Chart
-**Description**: Displays closing prices over time for all instruments of the selected asset type.
+**Type**: Candlestick chart
+**Description**: Displays OHLCV candlestick price evolution for the selected symbol(s). Candles are green for up-days and red for down-days.
 
-**Features:**
-
-- Smooth line interpolation
-- Multi-series comparison
-- Legend with last and mean values
-- Hover tooltip for detailed values
-
-**SQL Query:**
+**SQL Query (from market_data.json):**
 
 ```sql
 SELECT
   mp.timestamp AS time,
-  mp.close AS value,
+  mp.open,
+  mp.high,
+  mp.low,
+  mp.close,
   i.symbol AS metric
 FROM market_prices mp
 JOIN instruments i ON mp.instrument_id = i.id
 WHERE
-  i.asset_type = '${asset_type}'
+  i.symbol IN ($symbol)
   AND mp.timestamp >= $__timeFrom()
   AND mp.timestamp <= $__timeTo()
 ORDER BY mp.timestamp ASC
@@ -64,18 +67,12 @@ ORDER BY mp.timestamp ASC
 
 ---
 
-### 2. Trading Volume by Asset Type
+### 2. Trading Volume — `${symbol}`
 
-**Type**: Bar Chart
-**Description**: Shows trading volume over time for instruments of the selected asset type.
+**Type**: Bar chart (time series)
+**Description**: Shows trading volume for the selected symbol(s) over the selected time range.
 
-**Features:**
-
-- Bar visualization for volume data
-- Sum and mean calculations in legend
-- Synchronized time axis with price chart
-
-**SQL Query:**
+**SQL Query (from market_data.json):**
 
 ```sql
 SELECT
@@ -85,7 +82,7 @@ SELECT
 FROM market_prices mp
 JOIN instruments i ON mp.instrument_id = i.id
 WHERE
-  i.asset_type = '${asset_type}'
+  i.symbol IN ($symbol)
   AND mp.timestamp >= $__timeFrom()
   AND mp.timestamp <= $__timeTo()
 ORDER BY mp.timestamp ASC
@@ -93,27 +90,20 @@ ORDER BY mp.timestamp ASC
 
 ---
 
-### 3. Latest Prices Table
+### 3. Latest Prices — `${symbol}`
 
 **Type**: Table
-**Description**: Displays the most recent OHLCV data for each instrument.
+**Description**: Displays the most recent OHLCV snapshot for each selected instrument. The `close` column is color-coded. Sorted by timestamp descending.
 
-**Columns:**
+**Columns:** symbol, name, instrument_type, timestamp, open, high, low, close (€, color-coded), volume
 
-- Symbol
-- Name
-- Asset Type
-- Timestamp (latest)
-- Open, High, Low, Close (color-coded)
-- Volume
-
-**SQL Query:**
+**SQL Query (from market_data.json):**
 
 ```sql
 SELECT
   i.symbol,
   i.name,
-  i.asset_type,
+  i.instrument_type,
   mp.timestamp,
   mp.open,
   mp.high,
@@ -128,7 +118,7 @@ JOIN LATERAL (
   ORDER BY timestamp DESC
   LIMIT 1
 ) mp ON true
-WHERE i.asset_type = '${asset_type}'
+WHERE i.symbol IN ($symbol)
 ORDER BY mp.timestamp DESC
 ```
 
@@ -136,21 +126,25 @@ ORDER BY mp.timestamp DESC
 
 ## Using the Dashboard
 
-### Filtering by Asset Type
+### Step 1 — Select Asset Type
 
-1. Click the **Asset Type** dropdown at the top of the dashboard
-2. Select from available types: `STOCK`, `INDEX`, `CRYPTO`, etc.
-3. All panels will automatically update to show data for the selected type
+1. Use the **Asset Type** dropdown at the top to pick `crypto`, `index`, or `stock`
+2. The **Symbol** dropdown will automatically refresh and show only symbols of that type
+
+### Step 2 — Select Symbol(s)
+
+- The **Symbol** dropdown supports **multi-select** — pick one or more instruments to compare
+- Selecting **All** shows data for all symbols of the chosen asset type
 
 ### Adjusting Time Range
 
 1. Click the **time picker** in the top-right corner
 2. Select a preset range (Last 7 days, Last 30 days, etc.) or define a custom range
-3. All time-series panels will update accordingly
+3. All panels update automatically
 
 ### Zooming and Panning
 
-- **Zoom**: Click and drag horizontally on any time-series chart
+- **Zoom**: Click and drag horizontally on any chart
 - **Reset Zoom**: Double-click on the chart
 - **Pan**: Hold Shift and drag
 
@@ -181,55 +175,27 @@ ORDER BY mp.timestamp DESC
 
 ---
 
-## Common Queries
+## Dashboard Template Variables
 
-### Daily Returns
+The dashboard uses two linked Grafana query variables:
 
-Calculate daily percentage returns:
+### `${asset_type}` — Asset Type
 
-```sql
-SELECT
-  timestamp AS time,
-  symbol,
-  (close - LAG(close) OVER (PARTITION BY instrument_id ORDER BY timestamp))
-    / LAG(close) OVER (PARTITION BY instrument_id ORDER BY timestamp) * 100 AS daily_return
-FROM market_prices mp
-JOIN instruments i ON mp.instrument_id = i.id
-WHERE i.asset_type = '${asset_type}'
-  AND timestamp >= $__timeFrom()
-  AND timestamp <= $__timeTo()
-ORDER BY timestamp ASC
-```
-
-### Average Volume by Instrument
+Populates the first dropdown dynamically from the DB:
 
 ```sql
-SELECT
-  i.symbol,
-  AVG(mp.volume) AS avg_volume
-FROM market_prices mp
-JOIN instruments i ON mp.instrument_id = i.id
-WHERE i.asset_type = '${asset_type}'
-  AND mp.timestamp >= $__timeFrom()
-  AND mp.timestamp <= $__timeTo()
-GROUP BY i.symbol
-ORDER BY avg_volume DESC
+SELECT DISTINCT instrument_type FROM instruments ORDER BY instrument_type
 ```
 
-### Price Range (High-Low Spread)
+### `${symbol}` — Symbol (multi-select)
+
+Filters symbols based on the selected asset type:
 
 ```sql
-SELECT
-  mp.timestamp AS time,
-  i.symbol AS metric,
-  (mp.high - mp.low) AS value
-FROM market_prices mp
-JOIN instruments i ON mp.instrument_id = i.id
-WHERE i.asset_type = '${asset_type}'
-  AND mp.timestamp >= $__timeFrom()
-  AND mp.timestamp <= $__timeTo()
-ORDER BY mp.timestamp ASC
+SELECT symbol FROM instruments WHERE instrument_type = '${asset_type}' ORDER BY symbol
 ```
+
+All three dashboard panels filter on `i.symbol IN ($symbol)`.
 
 ---
 
@@ -247,7 +213,7 @@ ORDER BY mp.timestamp ASC
 
 1. Check if instruments exist: `docker-compose exec postgres psql -U market_data -d market_data -c "SELECT * FROM instruments;"`
 2. Verify data exists: `docker-compose exec postgres psql -U market_data -d market_data -c "SELECT COUNT(*) FROM market_prices;"`
-3. Run ETL ingestion: See Phase 4 documentation
+3. Run ETL ingestion: `docker-compose exec api python -m market_data_backend_platform.etl.services.ingestion`
 4. Check datasource connection: **Settings** → **Data Sources** → **PostgreSQL** → **Save & Test**
 
 ### Datasource Connection Failed
@@ -343,6 +309,6 @@ ORDER BY mp.timestamp ASC
 
 ---
 
-**Version**: 1.0
-**Last Updated**: 2026-02-13
-**Related**: [architecture.md](./architecture.md), [roadmap.md](./roadmap.md)
+**Version**: 2.0
+**Last Updated**: 2026-02-22
+**Related**: [architecture.md](./architecture.md) — [roadmap.md](./roadmap.md)
