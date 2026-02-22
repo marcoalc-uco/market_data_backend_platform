@@ -31,6 +31,10 @@ services:
       DEBUG: ${DEBUG:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       INGESTION_INTERVAL_MINUTES: ${INGESTION_INTERVAL_MINUTES:-5}
+      SECRET_KEY: ${SECRET_KEY:-changeme-generate-with-openssl-rand-hex-32}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@market.com}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-$2b$12$B9NxCdpM3Tz3YnxkXTqaw.trJaR.lz0bz9uzK5X56Au2FVuV23aLG}
     ports:
       - "8000:8000"
     depends_on:

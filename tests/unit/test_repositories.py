@@ -3,6 +3,7 @@
 Tests use SQLite in-memory for unit test independence.
 """
 
+from collections.abc import Generator
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,9 +15,11 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def test_engine() -> "Engine":
-    """Create a test engine with SQLite in-memory."""
-    return create_engine("sqlite:///:memory:")
+def test_engine() -> "Generator[Engine, None, None]":
+    """Create a test engine with SQLite in-memory, disposed after the test."""
+    engine = create_engine("sqlite:///:memory:")
+    yield engine
+    engine.dispose()
 
 
 @pytest.fixture

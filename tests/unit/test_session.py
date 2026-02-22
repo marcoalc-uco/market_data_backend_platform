@@ -4,6 +4,8 @@ This module tests the database engine and session factory setup.
 For unit tests, we use SQLite in-memory to avoid PostgreSQL dependency.
 """
 
+from collections.abc import Generator
+
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -16,23 +18,31 @@ class TestDatabaseEngineConfiguration:
     def test_engine_with_sqlite_returns_engine_instance(self) -> None:
         """Test that creating an engine returns a valid SQLAlchemy Engine."""
         test_engine = create_engine("sqlite:///:memory:")
-        assert isinstance(test_engine, Engine)
+        try:
+            assert isinstance(test_engine, Engine)
+        finally:
+            test_engine.dispose()
 
     def test_engine_can_execute_queries(self) -> None:
         """Test that the engine can execute basic queries."""
         test_engine = create_engine("sqlite:///:memory:")
-        with test_engine.connect() as connection:
-            result = connection.execute(text("SELECT 1"))
-            assert result.scalar() == 1
+        try:
+            with test_engine.connect() as connection:
+                result = connection.execute(text("SELECT 1"))
+                assert result.scalar() == 1
+        finally:
+            test_engine.dispose()
 
 
 class TestSessionFactory:
     """Tests for SQLAlchemy session factory."""
 
     @pytest.fixture
-    def test_engine(self) -> Engine:
-        """Create a test engine with SQLite in-memory."""
-        return create_engine("sqlite:///:memory:")
+    def test_engine(self) -> Generator[Engine, None, None]:
+        """Create a test engine with SQLite in-memory, disposed after the test."""
+        engine = create_engine("sqlite:///:memory:")
+        yield engine
+        engine.dispose()
 
     @pytest.fixture
     def test_session_factory(self, test_engine: Engine) -> sessionmaker[Session]:
@@ -77,22 +87,24 @@ class TestGetSessionGenerator:
     def test_get_session_yields_session(self) -> None:
         """Test that get_session generator yields a Session."""
         from market_data_backend_platform.db.session import (
-            SessionLocal,
             create_test_session_factory,
         )
 
-        # Use test factory for SQLite
-        test_factory = create_test_session_factory()
-        session_gen = _get_session_from_factory(test_factory)
-        session = next(session_gen)
-
-        assert isinstance(session, Session)
-
-        # Clean up
+        # Unpack both engine and factory to allow explicit disposal
+        test_engine, test_factory = create_test_session_factory()
         try:
-            next(session_gen)
-        except StopIteration:
-            pass
+            session_gen = _get_session_from_factory(test_factory)
+            session = next(session_gen)
+
+            assert isinstance(session, Session)
+
+            # Exhaust the generator so the finally block closes the session
+            try:
+                next(session_gen)
+            except StopIteration:
+                pass
+        finally:
+            test_engine.dispose()
 
 
 def _get_session_from_factory(

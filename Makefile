@@ -33,6 +33,8 @@ test-all:
 # Run tests with coverage report
 test-cov:
 	.\.venv\Scripts\pytest.exe --cov=src --cov-report=term-missing --cov-report=html
+	cmd /c start .\htmlcov\class_index.html
+	@echo Coverage report generated at .\htmlcov\class_index.html
 
 # Run integration tests (requires Docker)
 # Uses docker-compose.test.yml to avoid affecting production data

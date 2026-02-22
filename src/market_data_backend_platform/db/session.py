@@ -64,17 +64,28 @@ def get_session() -> Generator[Session, None, None]:
         session.close()
 
 
-def create_test_session_factory() -> "sessionmaker[Session]":
-    """Create a session factory for testing with SQLite in-memory.
+def create_test_session_factory() -> "tuple[Engine, sessionmaker[Session]]":
+    """Create an engine and session factory for testing with SQLite in-memory.
 
-    This is used in unit tests to avoid PostgreSQL dependency.
+    Returns both the engine and the session factory so the caller can call
+    ``engine.dispose()`` after the test, preventing ResourceWarning about
+    unclosed SQLite connections.
 
     Returns:
-        sessionmaker: Session factory bound to SQLite in-memory engine.
+        Tuple of (engine, sessionmaker) bound to an in-memory SQLite database.
+
+    Example::
+        engine, factory = create_test_session_factory()
+        try:
+            session = factory()
+            ...
+        finally:
+            engine.dispose()
     """
     test_engine = create_engine("sqlite:///:memory:")
-    return sessionmaker(
+    factory = sessionmaker(
         bind=test_engine,
         autocommit=False,
         autoflush=False,
     )
+    return test_engine, factory

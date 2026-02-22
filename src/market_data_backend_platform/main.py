@@ -10,11 +10,12 @@ Run with:
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from market_data_backend_platform.api.routes import health, instruments, prices
+from market_data_backend_platform.api.routes import auth, health, instruments, prices
+from market_data_backend_platform.auth.dependencies import get_current_user
 from market_data_backend_platform.core import (
     MarketDataError,
     get_logger,
@@ -80,19 +81,27 @@ app.add_middleware(
 
 
 # Register routers
-# Health endpoint at /health
+# Health endpoint at /health (public)
 app.include_router(health.router)
-# Instruments CRUD at /api/v1/instruments
+# Auth endpoints at /api/v1/auth (public)
+app.include_router(
+    auth.router,
+    prefix=f"{settings.api_prefix}/auth",
+    tags=["auth"],
+)
+# Instruments CRUD at /api/v1/instruments (protected)
 app.include_router(
     instruments.router,
     prefix=f"{settings.api_prefix}/instruments",
     tags=["instruments"],
+    dependencies=[Depends(get_current_user)],
 )
-# Prices query at /api/v1/prices
+# Prices query at /api/v1/prices (protected)
 app.include_router(
     prices.router,
     prefix=f"{settings.api_prefix}/prices",
     tags=["prices"],
+    dependencies=[Depends(get_current_user)],
 )
 
 

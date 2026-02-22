@@ -28,6 +28,13 @@ class Settings(BaseSettings):
         db_name: PostgreSQL database name.
         db_pool_size: Connection pool size.
         db_max_overflow: Maximum overflow connections.
+        database_url: Full PostgreSQL URL; overrides individual db_* fields if set.
+        secret_key: HMAC secret for signing JWT tokens (hidden from repr).
+        access_token_expire_minutes: JWT lifetime in minutes.
+        admin_email: Email of the single admin user allowed to log in.
+        admin_password_hash: Bcrypt hash of the admin password (hidden from repr).
+        scheduler_enabled: Enable automated data-ingestion scheduler on startup.
+        ingestion_interval_minutes: Interval between ingestion runs in minutes.
     """
 
     model_config = SettingsConfigDict(
@@ -83,6 +90,27 @@ class Settings(BaseSettings):
         default=10,
         ge=0,
         description="Maximum overflow connections beyond pool size",
+    )
+
+    # Auth - JWT
+    secret_key: str = Field(
+        default="changeme-generate-with-openssl-rand-hex-32",
+        repr=False,
+        description="Secret key for signing JWT tokens",
+    )
+    access_token_expire_minutes: int = Field(
+        default=30,
+        ge=1,
+        description="JWT access token lifetime in minutes",
+    )
+    admin_email: str = Field(
+        default="admin@market.com",
+        description="Admin user email for login",
+    )
+    admin_password_hash: str = Field(
+        default="$2b$12$B9NxCdpM3Tz3YnxkXTqaw.trJaR.lz0bz9uzK5X56Au2FVuV23aLG",
+        repr=False,
+        description="Bcrypt hash of admin password (set via ADMIN_PASSWORD_HASH env var)",
     )
 
     # Scheduler
